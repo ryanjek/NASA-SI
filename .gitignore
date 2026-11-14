@@ -216,5 +216,9 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+# Downloaded planetary rasters and generated screening outputs
+/data/raw/
+/data/processed/
+
 # Streamlit
 .streamlit/secrets.toml
