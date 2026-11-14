@@ -73,6 +73,34 @@ def _screen_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _export_web_command(args: argparse.Namespace) -> int:
+    from .webexport import export_web
+
+    try:
+        export_web(args.raw, args.out, cell_pixels=args.cell_pixels)
+    except FileNotFoundError as error:
+        raise SystemExit(str(error)) from error
+    return 0
+
+
+def _serve_command(args: argparse.Namespace) -> int:
+    import functools
+    import http.server
+
+    if not (args.directory / "data" / "arcadia.json").exists():
+        raise SystemExit(f"No map data in {args.directory}/data. Run `nasa-si export-web` first.")
+    handler = functools.partial(
+        http.server.SimpleHTTPRequestHandler, directory=str(args.directory)
+    )
+    with http.server.ThreadingHTTPServer((args.host, args.port), handler) as server:
+        print(f"Serving the Arcadia map at http://{args.host}:{args.port}/ (Ctrl+C to stop)")
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="nasa-si",
@@ -149,6 +177,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="minimum distance between reported candidates (default: 150)",
     )
     screen.set_defaults(handler=_screen_command)
+
+    export = subparsers.add_parser(
+        "export-web",
+        help="Write per-cell data and a hillshade for the interactive map",
+    )
+    export.add_argument("--raw", type=Path, default=Path("data/raw"))
+    export.add_argument("--out", type=Path, default=Path("web/data"))
+    export.add_argument("--cell-pixels", type=int, default=10)
+    export.set_defaults(handler=_export_web_command)
+
+    serve = subparsers.add_parser("serve", help="Serve the interactive map locally")
+    serve.add_argument("--directory", type=Path, default=Path("web"))
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8000)
+    serve.set_defaults(handler=_serve_command)
 
     return parser
 

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arcadia Outpost Finder · Mars Analog Explorer</title>
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Arcadia Outpost Finder</h1>
+        <p>
+          Exploratory suitability ranking for a Mars landing and temporary outpost in Arcadia
+          Planitia. Not landing certification.
+        </p>
+      </div>
+      <div class="status" id="status" role="status" aria-live="polite">Loading data…</div>
+    </header>
+
+    <main class="layout">
+      <aside class="controls" aria-label="Screening criteria">
+        <section class="intro">
+          <p>
+            <strong>Checkbox</strong> turns a criterion on or off.
+            <span class="chip requirement">Requirement</span> sliders exclude cells outright.
+            <span class="chip parameter">Scoring</span> sliders change how a criterion is scored.
+            <strong>Weight</strong> sets how much it counts; weights are rescaled to total 100%.
+          </p>
+        </section>
+        <div id="criteria"></div>
+        <div id="region-settings"></div>
+        <div class="actions">
+          <button type="button" id="reset">Reset to defaults</button>
+        </div>
+      </aside>
+
+      <section class="map-wrap">
+        <div id="map" aria-label="Map of Arcadia Planitia"></div>
+      </section>
+
+      <aside class="results" aria-label="Ranked candidate regions">
+        <div class="results-head">
+          <h2>Candidate regions</h2>
+          <button type="button" id="download">Download CSV</button>
+        </div>
+        <div class="component-key" id="component-key"></div>
+        <p class="results-note" id="results-note"></p>
+        <ol class="regions" id="regions"></ol>
+        <footer class="sources" id="sources"></footer>
+      </aside>
+    </main>
+
+    <script src="vendor/leaflet/leaflet.js"></script>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

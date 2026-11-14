@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "generated_at_unix": 1794641992,
+  "study_area": "Arcadia Planitia (SWIM pilot swath)",
+  "mars_radius_km": 3396.19,
+  "grid": {
+    "west": 188.0,
+    "north": 59.96875,
+    "east": 207.84375,
+    "south": 0.125,
+    "cell_deg": 0.15625,
+    "rows": 383,
+    "cols": 127,
+    "cell_pixels": 10,
+    "pixel_deg": 0.015625,
+    "longitude_convention": "degrees east, 0-360",
+    "order": "row-major from the north-west corner"
+  },
+  "cell_count": 48641,
+  "cells_file": "arcadia_cells.bin",
+  "fields": {
+    "elevation_median_m": {
+      "dtype": "float32",
+      "offset": 0,
+      "units": "m",
+      "description": "Median MOLA elevation relative to the areoid"
+    },
+    "ice_median": {
+      "dtype": "float32",
+      "offset": 194564,
+      "units": "",
+      "description": "Median SWIM ice consistency, -1 inconsistent to +1 consistent with ice"
+    },
+    "dci_median": {
+      "dtype": "float32",
+      "offset": 389128,
+      "units": "",
+      "description": "Median TES Dust Cover Index emissivity; higher means less surface dust"
+    },
+    "coverage": {
+      "dtype": "float32",
+      "offset": 583692,
+      "units": "",
+      "description": "Fraction of the cell's pixels with valid data in every layer"
+    },
+    "slope_median_deg": {
+      "dtype": "float32",
+      "offset": 778256,
+      "units": "deg",
+      "description": "Median slope on ~1 km MOLA pixels"
+    },
+    "slope_p95_deg": {
+      "dtype": "float32",
+      "offset": 972820,
+      "units": "deg",
+      "description": "95th-percentile slope on ~1 km MOLA pixels"
+    },
+    "relief_m": {
+      "dtype": "float32",
+      "offset": 1167384,
+      "units": "m",
+      "description": "Maximum minus minimum elevation within the cell"
+    },
+    "python_default_score": {
+      "dtype": "float32",
+      "offset": 1361948,
+      "units": "",
+      "description": "Reference score from nasa_si.model with the default profile"
+    }
+  },
+  "flatness": {
+    "dtype": "uint8",
+    "offset": 1556512,
+    "thresholds_deg": [
+      0.25,
+      0.5,
+      0.75,
+      1.0,
+      1.25,
+      1.5,
+      1.75,
+      2.0,
+      2.25,
+      2.5,
+      2.75,
+      3.0,
+      3.25,
+      3.5,
+      3.75,
+      4.0,
+      4.25,
+      4.5,
+      4.75,
+      5.0,
+      5.25,
+      5.5,
+      5.75,
+      6.0,
+      6.25,
+      6.5,
+      6.75,
+      7.0,
+      7.25,
+      7.5,
+      7.75,
+      8.0,
+      8.25,
+      8.5,
+      8.75,
+      9.0,
+      9.25,
+      9.5,
+      9.75,
+      10.0
+    ],
+    "scale": 200,
+    "missing": 255
+  },
+  "hillshade": {
+    "file": "arcadia_hillshade.png",
+    "west": 188.0,
+    "east": 207.84375,
+    "south": 0.125,
+    "north": 59.96875
+  },
+  "profile": {
+    "flat_slope_deg": 5.0,
+    "preferred_max_elevation_m": -2000.0,
+    "elevation_soft_margin_m": 2000.0,
+    "dusty_dci": 0.94,
+    "clear_dci": 0.96,
+    "max_abs_latitude_deg": 50.0,
+    "min_confidence": 0.8,
+    "flatness_weight": 0.3,
+    "ice_weight": 0.3,
+    "dust_weight": 0.2,
+    "elevation_weight": 0.1,
+    "confidence_weight": 0.1
+  },
+  "defaults": {
+    "latitude": {
+      "enabled": true,
+      "max": 50.0
+    },
+    "coverage": {
+      "enabled": true,
+      "min": 0.8,
+      "weight": 0.1
+    },
+    "flatness": {
+      "enabled": true,
+      "slopeDeg": 5.0,
+      "minFraction": 0.0,
+      "weight": 0.3
+    },
+    "ice": {
+      "enabled": true,
+      "min": -1.0,
+      "weight": 0.3
+    },
+    "dust": {
+      "enabled": true,
+      "dusty": 0.94,
+      "clear": 0.96,
+      "min": 0.85,
+      "weight": 0.2
+    },
+    "elevation": {
+      "enabled": true,
+      "preferredMax": -2000.0,
+      "margin": 2000.0,
+      "maxAllowed": 2000.0,
+      "weight": 0.1
+    },
+    "regions": {
+      "topPercent": 5.0,
+      "minAreaKm2": 100.0,
+      "count": 8,
+      "rankBy": "mean"
+    },
+    "stability": {
+      "trials": 60,
+      "perturbation": 0.2
+    }
+  },
+  "sources": [
+    {
+      "name": "MOLA MEGDR topography (64 pixels/degree)",
+      "url": "https://pds-geosciences.wustl.edu/missions/mgs/megdr.html"
+    },
+    {
+      "name": "SWIM Arcadia pilot ice consistency",
+      "url": "https://swim.psi.edu/PilotStudyProducts.php"
+    },
+    {
+      "name": "TES Dust Cover Index (Ruff and Christensen, 2002)",
+      "url": "https://tes.asu.edu/~ruff/DCI/dci.html"
+    }
+  ],
+  "caveats": [
+    "Regional screening only; this does not certify a landing site.",
+    "Slopes come from ~1 km MOLA pixels and miss metre-scale slopes, rocks, and small craters.",
+    "SWIM ice consistency combines 3 km orbital evidence; it is not a measured ice depth.",
+    "The Dust Cover Index is ~3.7 km per pixel and indicates surface dust, not dust thickness.",
+    "Shortlisted cells need CTX, HiRISE, and THEMIS review before being used as reference zones."
+  ]
+}
