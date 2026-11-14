@@ -218,3 +218,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Downloaded Earth/Mars data and per-file receipts
+data/
