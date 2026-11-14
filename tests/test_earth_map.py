@@ -245,6 +245,30 @@ class EarthMapUnitTests(unittest.TestCase):
             self.assertIn((62, -149), tiles)
             self.assertEqual(pf.filename, nc_name)
 
+    def test_dem_aggregation_to_1km_before_slope_removes_fine_scale_roughness(self):
+        # Create a 1200x600 (~90 m) tile with zero regional gradient but +/-15 m high-frequency
+        # local ripples that cancel inside every 10x10 (~1 km) block.
+        rows = np.arange(1200)[:, None]
+        cols = np.arange(600)[None, :]
+        fine_ripple = 15.0 * np.where((rows + cols) % 2 == 0, 1.0, -1.0)
+        fine_elev = (500.0 + fine_ripple).astype(np.float32)
+
+        # At native 90 m resolution, the alternating +/-15 m checkerboard produces steep local slopes
+        agg_elev = earth_map.aggregate_dem_to_1km(fine_elev, factor=10)
+        self.assertEqual(agg_elev.shape, (120, 60))
+        np.testing.assert_allclose(agg_elev, 500.0, atol=1e-5)
+
+        slope_1km = earth_map.compute_tile_slope_degrees(
+            agg_elev,
+            south_lat_deg=62.0,
+            west_lon_deg=-148.0,
+            north_row=np.full(60, 500.0),
+            south_row=np.full(60, 500.0),
+            west_col=np.full(120, 500.0),
+            east_col=np.full(120, 500.0),
+        )
+        np.testing.assert_allclose(slope_1km, 0.0, atol=1e-6)
+
 
 if __name__ == "__main__":
     unittest.main()
