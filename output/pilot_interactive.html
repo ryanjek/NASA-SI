@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Arcadia Outpost — Interactive Earth Analog Map Explorer</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased m-0 p-3 select-none">
+  <div class="max-w-[1600px] mx-auto space-y-3">
+    <div class="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-[var(--border)]">
+      <div>
+        <h1 class="text-base font-bold">Arcadia Outpost Earth Analog Interactive Explorer (PILOT)</h1>
+        <p class="text-xs text-[var(--muted-foreground)]">
+          EPSG:6933 Equal-Area Grid (9 km × 9 km cells) • Eligible: <span class="font-mono font-semibold text-[var(--foreground)]">615</span> / 660 mainland cells • Scroll to zoom, drag to pan, click or hover any 9 km cell
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-1.5 text-xs" id="layer-buttons">
+        <button data-layer="score" class="px-2.5 py-1 rounded font-medium bg-[var(--primary)] text-[var(--primary-foreground)]">5. Earth Score (Gated)</button>
+        <button data-layer="elevation" class="px-2.5 py-1 rounded font-medium bg-[var(--card)] border border-[var(--border)]">1. Elevation (m)</button>
+        <button data-layer="flatness" class="px-2.5 py-1 rounded font-medium bg-[var(--card)] border border-[var(--border)]">2. Flatness (&le;5&deg;)</button>
+        <button data-layer="permafrost" class="px-2.5 py-1 rounded font-medium bg-[var(--card)] border border-[var(--border)]">3. Permafrost (CCI v5)</button>
+        <button data-layer="coverage" class="px-2.5 py-1 rounded font-medium bg-[var(--card)] border border-[var(--border)]">4. Valid Coverage</button>
+        <button id="reset-view" class="px-2.5 py-1 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] ml-2">Reset Zoom</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
+      <div class="lg:col-span-3 bg-[var(--card)] border border-[var(--border)] rounded-lg p-2 relative overflow-hidden space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs px-1">
+          <div class="flex flex-wrap items-center gap-1.5" id="region-presets">
+            <span class="text-[var(--muted-foreground)] font-medium">Quick Jump:</span>
+            <button data-region="all" class="px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:opacity-90">Full Extent</button>
+            <button data-lat="70.2" data-lon="-153.0" data-z="5.5" class="px-2 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:bg-[var(--secondary)]">Alaska North Slope</button>
+            <button data-lat="63.5" data-lon="-147.5" data-z="7.0" class="px-2 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:bg-[var(--secondary)]">Interior Alaska Pilot</button>
+            <button data-lat="70.5" data-lon="-94.0" data-z="5.5" class="px-2 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:bg-[var(--secondary)]">Boothia / Nunavut</button>
+            <button data-lat="54.5" data-lon="-84.5" data-z="4.5" class="px-2 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:bg-[var(--secondary)]">Hudson Bay Lowlands</button>
+            <button data-lat="52.0" data-lon="-117.0" data-z="5.0" class="px-2 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:bg-[var(--secondary)]">Canadian Rockies</button>
+          </div>
+          <div id="zoom-readout" class="font-mono text-[var(--muted-foreground)]">Zoom: 1.0x</div>
+        </div>
+        <canvas id="map-canvas" width="1080" height="540" class="w-full h-[460px] rounded cursor-crosshair block"></canvas>
+        <div class="flex flex-wrap items-center justify-between text-xs pt-1 px-1 text-[var(--muted-foreground)] gap-2">
+          <div id="legend-bar" class="flex items-center gap-2">
+            <span id="legend-title" class="font-semibold text-[var(--foreground)]">Earth Analog Score (0.0 – 1.0)</span>
+            <span class="inline-block w-3 h-3 rounded-sm" style="background:#cdc0c0;border:1px solid #777"></span>
+            <span>Rejected / &lt;80% valid coverage</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <label for="weight-slider" class="font-medium text-[var(--foreground)]">Flatness Weight:</label>
+            <input id="weight-slider" type="range" min="0" max="100" value="50" class="w-28 accent-[var(--primary)]" />
+            <span id="weight-label" class="font-mono text-[var(--foreground)]">50% Flat / 50% PFR</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3 flex flex-col justify-between">
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-3 space-y-2">
+          <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Live 9 km Cell Inspector</div>
+          <div id="cell-readout" class="text-xs space-y-1 font-mono">
+            <div>Hover or click any cell on the map...</div>
+          </div>
+        </div>
+
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-3 space-y-2 flex-1 overflow-hidden flex flex-col">
+          <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Top Ranked Analog Cells (Click to Zoom)</div>
+          <div id="top-list" class="space-y-1 overflow-y-auto max-h-[260px] pr-1 text-xs"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DATA = {"rows": 20, "cols": 33, "row_start": 37, "col_start": 225, "west_km": -14382.0, "east_km": -14085.0, "south_km": 6471.0, "north_km": 6651.0, "lat_1d": [64.9545, 64.7902, 64.6269, 64.4645, 64.3031, 64.1426, 63.9831, 63.8244, 63.6667, 63.5098, 63.3537, 63.1985, 63.0441, 62.8905, 62.7378, 62.5858, 62.4345, 62.2841, 62.1343, 61.9853], "lon_1d": [-149.0108, -148.9175, -148.8243, -148.731, -148.6377, -148.5444, -148.4512, -148.3579, -148.2646, -148.1713, -148.078, -147.9848, -147.8915, -147.7982, -147.7049, -147.6117, -147.5184, -147.4251, -147.3318, -147.2386, -147.1453, -147.052, -146.9587, -146.8654, -146.7722, -146.6789, -146.5856, -146.4923, -146.3991, -146.3058, -146.2125, -146.1192, -146.0259], "elev_min": 112.8, "elev_max": 1992.6, "cells_total": 660, "cells_land": 660, "cells_eligible": 615, "is_pilot": true, "bbox": [-149.0, 62.0, -146.0, 65.0], "layers": {"score": "data:image/png;base64,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", "elevation": "data:image/png;base64,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", "flatness": "data:image/png;base64,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", "permafrost": "data:image/png;base64,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", "coverage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAUCAYAAAADU1RxAAABdElEQVR42u2VS0sCURiGn1G7OTRDGpmSCYlFqOUiCorctS36EfV3WvcDglq267KJiqCNEV0JTaVyVirepqacbNXFAiFHJMh3eTbnOd8573MEXZmqAJycBxjzXWDuqNDsCO8Q9UbXBABD8Bajp2jE5Ez8gbQgWhANa0c+J2MxldmPBIjdd5HJC/iHnimqZgYcj0iiRjwlYe0s47CpmM2vjHjiRO88+L1XVa36tSeyGTuJlJPL2x6SioXnMkSui7j7LMQeXrBJJoY9Iv32CjfJMqsHOk/ZGLTLzI3I+NztOHs7mAnl6WzTmfCfGpeVWhCxdpdqQm/sBFnbLiJ1QSJtwmZ9JRwSCXr1xhizHlhdE6quo2kP8+u0vlu2VdH/CfH+5dcNoWsCakE0BHF8FmL3cPLHuqK4PiuqawKbe9OsrGsshLuZHc8y6o0jybkPgFo+MKRtRXGxdeQjeg/Li0mW5gdR0lB6akOScw3f/Cbqw+uOVtX0DRT8j1G290q/AAAAAElFTkSuQmCC"}, "packed": {"elev_u16": "eJwdU2lQkFUU1Xfvufd9MGKIIoNLC7lmKWPqpGkW5g+o1EZKS9HJBbdUdNTBFCwVRQcpXMDUcSU1l3DXRspywRyLwnHDGIYgI0nNLbAMuznnxzffe3c759yX6BLdYDfUlbotdISSKYlCKcxQ5VrQ49SZxtNWGkNtqIH9xdAoSqV0+pCW0zbKpM1UTYdoiGWPdN84T3+43e5zd9jddxdcmpvlUt0cN88tcBku02W7PLfJoh66mbSOJlNb2kj1dJ2e5RieZBHZbpyb4N53KW66YablfuDS7XyRW+o+divcKvepW28VzrqGtIy+ppv0PeXSUTpmM02nlEcZc91HbqFlZFm1XLfGbXAb3Va3w6bKd7vcQXfIZvvSnXJXXCNKpF7Ujlobp7nUkBvzWrft0W2BRRW7clfhyiyu3N12jiIt7knqQc9QJ4qiOru55pqbJr2t9zTKoNXUlyJoLv/C+dyWV/I7nMyvsfIYPs4juA9v4EzrUEO36KyhhErphM2eYSqmmeLDaST1pJepC4Vye/zF2dwSkwBJliU4gp6SJ6myBbPQTb6SzpKNN/EdhuEwp3MBF/JQDrPKP9IPpmcW5VjPAZiD04iQsXJHUjRX4zROvCzWN3yKj/afacSjk4lYgUHog4PSVGq4K7rhFM/nphwu5TyF6zgRWzABabiCMRKtk/W8RvlYH++jg3eDF0Pygn1+r98V7A45F3TyC/xqvSGztZfewTn+W4rlOE+SzXJSojRGK63DDKmQ+/KYLNfL+ro+5yfrGU3S6/KzNvcRQWEQFbI7iA3JDHJ8ll6VOLTB83IGNegiU+zbB50Qgy54CT0Qh67ojYkYiRfQQZZIM+2np7WvT/PVPtdf9qG+v57T+VIvt6SJjtZMrZNpUosibJA54qSFhEs33OUwqZVwbaNN9JIM1IWyXb5AHXZKI1NnkLQ2rV/SP+UpvSDvaUfNlKlyD2nCEiKDDDtRzXdZMBuRcgSr8BMuohgzMA4P0VIeIt/UXQOSRGkoU3CVq3gYzphb9fwb1km86RErJ7ASb+Eml/GvHIZ4Y5SGUpzEfhzDXhRiO0rMkT18kEv4GldgLRJMwaV4Glk4ikrbkCJcQne5zKWchI1YjGQkIBbtESAabdES/VDAryBaHuCAHNDNekGHab2UYKyky3kpkzu2S2GGe3ybYZpU8u983/Avh1p+R7TGHi6XQlkmrGnyLTbpPzrcBxrpe/t9+kAKJEkysMN6j0J38yce/cHG8woHaGWTRGIvZ/Fi3a9lusD389WaKuG+VdAhmG4+DdchtgvX5W1ZZA4lmDfrMd6yavgi/8+plIvsPX3Ci3mg3tMcbRw8EXI0uOEb+Aqt10IPn+xH+Rx9VaGLZJS0l4vmQAIGoJ5P2wyD0cv2popX8DTO152egypd6qfaGzgvB+SCtvO1OkPvSpFUGr9mxnCEKRqPWs4yFsWcxz3s9Y7mVF7I8/g/5oBWxQ==", "flat_u16": "eJyNVD1oKlkYfU7mT+fH0ZnR+XF0ZhwnoIWFKSz0QQoJWIjwivAgRUjh8hA28LBIY2FjYWMhgrBBSBGEFGIhiIUgFj7EwkKLwD4XUsQiCwY2TVhS7L24j014+5blY/7uzHfuPeeeM9w+B4q3D4UTD8acuxE1KfbFUmAdzOt5/SxYVeb6YyCvr0KUUtRaUl+88SXFuK8ladITm+VvfLC/Y9XlqrIOtiPtSNosauvgkQHHZZvbf1tnQUGO++qyJtn+W08pANE+htqRg/C3b5vf9bwu2V6F+uKV/9w9Eq4AwkjI63X5vzr+qR2ybKfNvD7X02YpcGTELEopq8LfCDErZnWs/4NlAqYxqxfeaHMdUduRjrXRPnjvuCy/8G4A/164F14HS4GyWtQQ9Vk9Mpr2xOiF25Gh2bTbke+V4fYfgRqlwLP6GKCUAvfCwCNBdkmMMVxPLEtjzIBoSZSiSWW1LpfVs+A6+Ha1C++5O0WM8Rw2w6LOFJEito57ZIw3qAEY/YQcowMig3fJGj0SHtxx3y3Yc01CwOrakbkOEVLEwmv7r/xTvkZXmBqYs0bD7iX6da+D+fAM/tmxdXx2LNEM/u7d1vEJucR/x1r4e/o3CmP6YoGbYUs0QR6jcJ7d+dJ16crgv5I/0wPiHkmQKcJwjXGMiTp3uBlcorrk1pHD7pGve386TjxJMUE2qCf22lng7rgDoGRZ/Ria600burIUyutr4KNDIcs3qBn2C+AlgWsGT5BjvEaPAd6lC7If44aLpW1/xypqBQ6qOzThfdqMOnNgnVDVLvngvvVUmFvAOe77wl+wh8IdF3VCFVNArQw+ICpMUtSkKX/i6YsnngLH0hMDenjKjwRE7VjQR7LdtIfmQbhjHYSPwNsKU9Su/AtvUrT9VZCduT40BfnaWWG6ZJYvq6tQGnwNPWlGVqF1cK5vNEqBzCAK9E3cV1Wqyg1Iy7Nq+0eCREnUSKDAyB137q4qQ3MVKmplVbbh+caHqHkwx8SoKoK8ARwnxhP74L5gXxioRg7LYQ2qLy68cBZErSowo2992LHg8+sxw7VEoXe2jgx+j8C9hDsKdf3gnfItaWKkTcihaf8ot7sd6ZIDYkBEndCXf6AKcECFmfJTPss/BmD6IZd/ywSsJXoKXAE9t0SP0RhwYBMznS8MxKjRD+66PDQ32tD89od4nfamDZ+9wFunez+hM5CL0z3osl1CoPdm2AXboCqMAFSGHROjrFLK0Nz1X4d6YYj5F4mRSbQ=", "pfr_u16": "eJxdk21MVXUAxs/r/55zz7n3nvdzz/sLlxe1JSFm74mJommhTDYMB4iVV1RGKoWhNVdKBhORSBmGOsCXTEnBQAdIZtZSIYFBU3GSzZSmbpohEwjXt35fnm/P78vzpAr3AmV0LTWH7PFcwu+D6Zgf6wIZxDmPDjLwDnAau4idAnFYJF6M+ZFW6AYSiyeSjzy5ZAW5jLrjXUtmcu/4B2keR9BEdB6agd8CF7EVaKe3maqnv6cW+Ajvb4QL/gYr8d+xZs9luAxuhKchexEBvEp+RO31zfJNZraDKdgkkAJuUOcpNlDPnuEFiQ5WioeZTDaBFZleYoan01OEv4Qew/bDs6ABZAx9Ab0O/QAPoWfxMDkYXCJXS/O5WYER/yJapB9Rm5guftjH0G10vDeRukA/743DGGAhI2g7vh3phsLQckiCk+Fm9BKkwNEoRM6m++l2+kUqm1iBhSEIwuA8GKCpWBXu9zzr6fHcRgsRBIGgYiQX/hzJQdqhdmgDHI2VwVXQdDQbmxFwuTGaoQ6y7/uW+9aSpWSYavehAYGay9YzqeQg/qo3xVsNWqmJ/jBj+4ZJjycF2Yn2welwBRwN1uDNwhd6on6dnyTPVXv1JEPQ7xix9hU71mpUisUJUrKaZOfrTdKIlWqbwSp/LpfOF/hbKZs8QYyi1WgR0sI+5PLkBqlejdILrNXOQvdDt9y9qpVomNrhJoS2utusXWa+vc6eps6VipQt8g59QTBdyGfDzGlmlXcv1qs9YObRPwb8/EyxXzghvCct1BKNh0aaFWMfcevcmtBrISa6P+p6hOvG2ZXGdqffXWay1ttGjt6g/yXVe3Gn0xzjutUWa4c5wz5q0/Zm9ahyXO8wDhjRVraz06pzI51uq17vsQrtM6GsqLExJjopandkTGRx6KExqoWkPv5X8YBSq5QoG7WwgsuInBXcFKyUpjCw+DO3mB3jVKYucNxfJDrKkHrfWWDusmrNP5wa87T5upZs5Bm4+af5jAUc2ykw9xtfG5KZpS9S29R2qUboYJOog/4+eVTxaF+pBcHb2nrxmpLHu4EN/AQlrDkyJU/WplpXtDwzZJ43LpsxxpBerruaoX6rxAXTg/niZl9P4B7D8lHiFr6WSxCXiisZnpviO88OCLRwQejiSvwe4RM5RYtU9sjVyuNgqbiTbxAK5Uh1vfKxLCrzZDdg+S5BfXAv+hloo0969wVauV4ugXvApTEu08jGkBsJDJhEDbk4cJdR+XelO/xd4Rd+SDorTBbv8VuF1cKA0kVWYZ3kl3wfj3IT/TnkKUARP9HrKIWIBWsATEcLLaI/CJnnzAprjzlq3NQFM98s0Fv1bC1DWkKlERfImUQucRMcJV6hVhAj+HJQBm+DS+HdUAEE5KWiIBQIh+Wr/HytzpzjbDO7jU/deLNGl7Wn1QaRJQ7RbZ5kfBhMBRV4NbYMjYOb4HgoBm6FEqFyGEgfKG+pM91/nH1WjRJh3orAI7VQpnvKWGU+ZzBqpdIoH1PSpGF+vs/r/Q7NQUqQJug/IqAMmIe/4VepS+Rr47uLjSqMeOwkWwn2U6E5dpY9aL9hl8vHpSg+UzjEnaRTQAuSNO6Oh0qgJ/YnDdB4Hgk22qXOPqdJ32xy9pv6VRpXbpt+bUR9OTjAz+ZnB7LZxVQaCWMiDEFg/NH/51/Tkmcw", "cov_u16": "eJwTUBdQvyIvqSagTisoqUZL00ch/eByFSXVEhk1cUcRJmkRyWzZSPk2qR/SkfJX5JVUAxQIxbK2yhX5fsm9IseEJbhf8StysfIeE14oHiN4h5mBoYhRkStNYK/IM9m7coRTi5IquskLxddxzOFyZVvHcV6IW4pbihzfQUwdTauUQ0JhKKmGHoPoMEnuvQyMbaIM0cMkvY5ji+hdueUqoLgiZAIqNFGeIXFeyFZJRNJCNFuWeH3uijC/AADa6aLJ", "score_u16": "eJyNU3tM1mUUzsum8H2/y/ue895+74+PEUYiGtmctLxwCWumhQiYM9QYGMYIi8gVw3Q2FC8ZApVYEBdvKKX42dKENAPJTXFGgmaazhwzhhGmZWr2aWtr/dVztnP+Os85Z895/CHL9An1vWwzK725QWM9tVa993Ezh86E8dBNN9B66yg9SeLpEjrNarZ2eKd7+4zJFlpDyXf2aMO1LHuvu985IpOtVpOQ1/BNVo4uGUE8fIE6r/rkw85a+auo5EPEZH6DZYlQO8UY8Fw05htV5hrjD4igsaRVSL4H7udNvFDlqU7neTcnpMy3LjTNd04/6ka65fqqiBQvi+k8gr3AvrBvBycYnwXd9MR7O4LmeIOhiPwZGhN6yrfTjdLD9G5VporVEZ0fUuyUqh5VJ6PUFbVZ1rKZfAOuYH0sm5bZG+0U0mZOIwOQZ0wzfeZw2ah+U4ulXxTzFtYMJRCM8ehhfjaLWyJc5Isl7DCuwhLowFg8hochGhbT9+kwEk2OG4uwGCv4BNpvjrEm0p0snJfxGh7OHBbHYjGCp/JnWBwfxAcLH58o5jtDdJUqlh6xG1NZAY7HFPyQJ/BvZY1Kd/uE4Yxyqnkdm8SvsbHYhpr3kjjqkh1wH650MqThXg7pll62ULqqVGUrKS+KlWw2O4pP0EfIs9bn5h3rdzsZ07Adx9FmmkRK4Zz9NabBK1APi2gZLuWFwoEzYhcexRi5U8xTQ3SbPCBPs9XkAtlH9kAO9NjRpMZuJlcgF7spp4NpFM7DO/+Csu/mFhxJT9JvcASexRl8jZENJ0il8Z41CGrhaVoIc3E9jaBFJA087M7/wC3zIJTgYKuKTsdKMsAeYG5Iv/Oz6tN+naW3OWtVttyqisRcLCQv4hyaYT9J/8uRiMlIIQYuQg1LZNlOZNiXIZl8mazULe5mt0p8xS97ys2F1m2cBRX2T6wBdsEmVkC68HXej03sOoymN+m7dhcdR4PoVEhlUs12CkQL2y3aMQMP2ZsC2q3AXPgFE8UWnajb3QSd6l4Xy5xWt0YH67F8mLlPlgsiokWmAGecHqNH6h/5ersTkCxgU51SvUuOkn4owCJ8CDrYIdbKs3iFekd2Oe3qOCsVjdZyMsXOsjaSBhaMvXDAfsvqwl5+gnfSJDpB1OowZ4veRp9j1bBaxLPlfJKgPBankiv0E4xiN8AffM1IImdJGqmmHppPFTutzgjLzQxt0XU6zbfXt19+KvLkdnFQ3OTnxYBIECt5HE/GJJyBXdAK5bZjXDKqjGNeYihrO1xlOTQe6nEUFok8kan26wfZRypbXGXtvI6n8G72GAvDLKwDF3tgB8zETHMQrLPfYN3YCNnkOlnFb+EHATdUM6WWyo/5FN3ge9W3yu1RfvW2zGQtePzel5UEPFgJMUgxzttjNnr/0RYww+6lW3l44OLxIpcfgDDZ74SrJueSauI92AR1geiAhsD0EkgHI1DP3+seCn8zbLTSh0dac6hLc614q8v7g/2SkW/F0AZawihesOPNFCOdPAV3N+i0TpGSAMdf6OW+Lw==", "land_u16": "eJwTUBcYhaNwFI7CUYgHAgDVu43N"}, "top_candidates": [{"rank": 1, "cell_id": "r0048_c0233", "grid_row": 48, "grid_col": 233, "center_x_m": -14305500.0, "center_y_m": 6547500.0, "center_lat_deg": 63.198511, "center_lon_deg": -148.264603, "land_area_fraction": 1.0, "elevation_m": 1027.42, "flatness_fraction": 0.9383, "permafrost_fraction": 0.7595, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.8489}, {"rank": 2, "cell_id": "r0040_c0225", "grid_row": 40, "grid_col": 225, "center_x_m": -14377500.0, "center_y_m": 6619500.0, "center_lat_deg": 64.464514, "center_lon_deg": -149.010823, "land_area_fraction": 1.0, "elevation_m": 124.69, "flatness_fraction": 1.0, "permafrost_fraction": 0.6379, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.819}, {"rank": 3, "cell_id": "r0039_c0236", "grid_row": 39, "grid_col": 236, "center_x_m": -14278500.0, "center_y_m": 6628500.0, "center_lat_deg": 64.626872, "center_lon_deg": -147.98477, "land_area_fraction": 1.0, "elevation_m": 135.19, "flatness_fraction": 1.0, "permafrost_fraction": 0.6156, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.8078}, {"rank": 4, "cell_id": "r0052_c0237", "grid_row": 52, "grid_col": 237, "center_x_m": -14269500.0, "center_y_m": 6511500.0, "center_lat_deg": 62.585769, "center_lon_deg": -147.891493, "land_area_fraction": 1.0, "elevation_m": 1163.08, "flatness_fraction": 0.8272, "permafrost_fraction": 0.7798, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.8035}, {"rank": 5, "cell_id": "r0040_c0226", "grid_row": 40, "grid_col": 226, "center_x_m": -14368500.0, "center_y_m": 6619500.0, "center_lat_deg": 64.464514, "center_lon_deg": -148.917545, "land_area_fraction": 1.0, "elevation_m": 130.32, "flatness_fraction": 1.0, "permafrost_fraction": 0.5981, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7991}, {"rank": 6, "cell_id": "r0040_c0227", "grid_row": 40, "grid_col": 227, "center_x_m": -14359500.0, "center_y_m": 6619500.0, "center_lat_deg": 64.464514, "center_lon_deg": -148.824268, "land_area_fraction": 1.0, "elevation_m": 133.49, "flatness_fraction": 1.0, "permafrost_fraction": 0.5791, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7896}, {"rank": 7, "cell_id": "r0052_c0241", "grid_row": 52, "grid_col": 241, "center_x_m": -14233500.0, "center_y_m": 6511500.0, "center_lat_deg": 62.585769, "center_lon_deg": -147.518383, "land_area_fraction": 1.0, "elevation_m": 862.18, "flatness_fraction": 1.0, "permafrost_fraction": 0.5727, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7864}, {"rank": 8, "cell_id": "r0054_c0242", "grid_row": 54, "grid_col": 242, "center_x_m": -14224500.0, "center_y_m": 6493500.0, "center_lat_deg": 62.284066, "center_lon_deg": -147.425105, "land_area_fraction": 1.0, "elevation_m": 1171.26, "flatness_fraction": 0.963, "permafrost_fraction": 0.6069, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7849}, {"rank": 9, "cell_id": "r0039_c0235", "grid_row": 39, "grid_col": 235, "center_x_m": -14287500.0, "center_y_m": 6628500.0, "center_lat_deg": 64.626872, "center_lon_deg": -148.078048, "land_area_fraction": 1.0, "elevation_m": 132.82, "flatness_fraction": 1.0, "permafrost_fraction": 0.5652, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7826}, {"rank": 10, "cell_id": "r0054_c0243", "grid_row": 54, "grid_col": 243, "center_x_m": -14215500.0, "center_y_m": 6493500.0, "center_lat_deg": 62.284066, "center_lon_deg": -147.331828, "land_area_fraction": 1.0, "elevation_m": 1149.97, "flatness_fraction": 0.9012, "permafrost_fraction": 0.6578, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7795}, {"rank": 11, "cell_id": "r0052_c0240", "grid_row": 52, "grid_col": 240, "center_x_m": -14242500.0, "center_y_m": 6511500.0, "center_lat_deg": 62.585769, "center_lon_deg": -147.61166, "land_area_fraction": 1.0, "elevation_m": 1023.49, "flatness_fraction": 0.8519, "permafrost_fraction": 0.7011, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7765}, {"rank": 12, "cell_id": "r0039_c0237", "grid_row": 39, "grid_col": 237, "center_x_m": -14269500.0, "center_y_m": 6628500.0, "center_lat_deg": 64.626872, "center_lon_deg": -147.891493, "land_area_fraction": 1.0, "elevation_m": 139.44, "flatness_fraction": 1.0, "permafrost_fraction": 0.553, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7765}, {"rank": 13, "cell_id": "r0043_c0246", "grid_row": 43, "grid_col": 246, "center_x_m": -14188500.0, "center_y_m": 6592500.0, "center_lat_deg": 63.983087, "center_lon_deg": -147.051995, "land_area_fraction": 1.0, "elevation_m": 872.14, "flatness_fraction": 0.7037, "permafrost_fraction": 0.8278, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7657}, {"rank": 14, "cell_id": "r0048_c0234", "grid_row": 48, "grid_col": 234, "center_x_m": -14296500.0, "center_y_m": 6547500.0, "center_lat_deg": 63.198511, "center_lon_deg": -148.171325, "land_area_fraction": 1.0, "elevation_m": 978.99, "flatness_fraction": 0.7531, "permafrost_fraction": 0.7702, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7617}, {"rank": 15, "cell_id": "r0037_c0225", "grid_row": 37, "grid_col": 225, "center_x_m": -14377500.0, "center_y_m": 6646500.0, "center_lat_deg": 64.954519, "center_lon_deg": -149.010823, "land_area_fraction": 1.0, "elevation_m": 97.31, "flatness_fraction": 1.0, "permafrost_fraction": 0.5206, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7603}, {"rank": 16, "cell_id": "r0040_c0235", "grid_row": 40, "grid_col": 235, "center_x_m": -14287500.0, "center_y_m": 6619500.0, "center_lat_deg": 64.464514, "center_lon_deg": -148.078048, "land_area_fraction": 1.0, "elevation_m": 167.37, "flatness_fraction": 1.0, "permafrost_fraction": 0.5075, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7538}, {"rank": 17, "cell_id": "r0039_c0234", "grid_row": 39, "grid_col": 234, "center_x_m": -14296500.0, "center_y_m": 6628500.0, "center_lat_deg": 64.626872, "center_lon_deg": -148.171325, "land_area_fraction": 1.0, "elevation_m": 130.11, "flatness_fraction": 1.0, "permafrost_fraction": 0.5059, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.753}, {"rank": 18, "cell_id": "r0047_c0233", "grid_row": 47, "grid_col": 233, "center_x_m": -14305500.0, "center_y_m": 6556500.0, "center_lat_deg": 63.35372, "center_lon_deg": -148.264603, "land_area_fraction": 1.0, "elevation_m": 842.06, "flatness_fraction": 0.9012, "permafrost_fraction": 0.5893, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7452}, {"rank": 19, "cell_id": "r0049_c0249", "grid_row": 49, "grid_col": 249, "center_x_m": -14161500.0, "center_y_m": 6538500.0, "center_lat_deg": 63.044125, "center_lon_deg": -146.772162, "land_area_fraction": 1.0, "elevation_m": 995.07, "flatness_fraction": 0.9259, "permafrost_fraction": 0.5474, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7367}, {"rank": 20, "cell_id": "r0049_c0254", "grid_row": 49, "grid_col": 254, "center_x_m": -14116500.0, "center_y_m": 6538500.0, "center_lat_deg": 63.044125, "center_lon_deg": -146.305775, "land_area_fraction": 1.0, "elevation_m": 1063.71, "flatness_fraction": 0.9383, "permafrost_fraction": 0.5346, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7364}, {"rank": 21, "cell_id": "r0048_c0238", "grid_row": 48, "grid_col": 238, "center_x_m": -14260500.0, "center_y_m": 6547500.0, "center_lat_deg": 63.198511, "center_lon_deg": -147.798215, "land_area_fraction": 1.0, "elevation_m": 1063.07, "flatness_fraction": 0.8889, "permafrost_fraction": 0.5825, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7357}, {"rank": 22, "cell_id": "r0038_c0225", "grid_row": 38, "grid_col": 225, "center_x_m": -14377500.0, "center_y_m": 6637500.0, "center_lat_deg": 64.7902, "center_lon_deg": -149.010823, "land_area_fraction": 1.0, "elevation_m": 99.91, "flatness_fraction": 1.0, "permafrost_fraction": 0.4704, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7352}, {"rank": 23, "cell_id": "r0040_c0228", "grid_row": 40, "grid_col": 228, "center_x_m": -14350500.0, "center_y_m": 6619500.0, "center_lat_deg": 64.464514, "center_lon_deg": -148.73099, "land_area_fraction": 1.0, "elevation_m": 136.91, "flatness_fraction": 1.0, "permafrost_fraction": 0.4685, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7343}, {"rank": 24, "cell_id": "r0048_c0239", "grid_row": 48, "grid_col": 239, "center_x_m": -14251500.0, "center_y_m": 6547500.0, "center_lat_deg": 63.198511, "center_lon_deg": -147.704938, "land_area_fraction": 1.0, "elevation_m": 1053.29, "flatness_fraction": 0.9383, "permafrost_fraction": 0.5284, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7333}, {"rank": 25, "cell_id": "r0054_c0244", "grid_row": 54, "grid_col": 244, "center_x_m": -14206500.0, "center_y_m": 6493500.0, "center_lat_deg": 62.284066, "center_lon_deg": -147.23855, "land_area_fraction": 1.0, "elevation_m": 1111.48, "flatness_fraction": 0.8889, "permafrost_fraction": 0.5721, "input_coverage": 1.0, "eligible": true, "gate_failure": "", "score": 0.7305}]};
+    const canvas = document.getElementById('map-canvas');
+    const ctx = canvas.getContext('2d');
+    let currentLayer = 'score';
+    let flatWeight = 0.5000;
+    let images = {};
+    let grids = {};
+    let view = { scale: 1, tx: 0, ty: 0 };
+    let selectedCell = null;
+    let hoverCell = null;
+
+    async function decompressU16(b64) {
+      const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const ds = new DecompressionStream('deflate');
+      const writer = ds.writable.getWriter();
+      writer.write(bin);
+      writer.close();
+      const buf = await new Response(ds.readable).arrayBuffer();
+      return new Uint16Array(buf);
+    }
+
+    function fitView() {
+      const pad = 16;
+      const sx = (canvas.width - pad * 2) / DATA.cols;
+      const sy = (canvas.height - pad * 2) / DATA.rows;
+      view.scale = Math.min(sx, sy);
+      view.tx = (canvas.width - DATA.cols * view.scale) / 2;
+      view.ty = (canvas.height - DATA.rows * view.scale) / 2;
+      draw();
+    }
+
+    function draw() {
+      const isLight = document.documentElement.classList.contains('light');
+      ctx.fillStyle = isLight ? '#eef2f6' : '#141820';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(view.tx, view.ty);
+      ctx.scale(view.scale, view.scale);
+      ctx.imageSmoothingEnabled = false;
+      if (images[currentLayer]) {
+        ctx.drawImage(images[currentLayer], 0, 0, DATA.cols, DATA.rows);
+      }
+
+      // Highlight top candidates
+      ctx.lineWidth = 1.5 / view.scale;
+      for (const cand of DATA.top_candidates.slice(0, 10)) {
+        const r = cand.grid_row - DATA.row_start + 0.5;
+        const c = cand.grid_col - DATA.col_start + 0.5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(c, r, Math.max(1.2, 5 / view.scale), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      const target = selectedCell || hoverCell;
+      if (target) {
+        ctx.strokeStyle = '#ff3366';
+        ctx.lineWidth = 2.0 / view.scale;
+        ctx.strokeRect(target.c, target.r, 1, 1);
+      }
+      ctx.restore();
+      document.getElementById('zoom-readout').textContent = `Zoom: ${(view.scale / Math.min((canvas.width-32)/DATA.cols, (canvas.height-32)/DATA.rows)).toFixed(1)}x`;
+    }
+
+    function updateInspector(r, c) {
+      if (r < 0 || r >= DATA.rows || c < 0 || c >= DATA.cols || !grids.land_u16) return;
+      const idx = r * DATA.cols + c;
+      const gRow = DATA.row_start + r;
+      const gCol = DATA.col_start + c;
+      const cellId = `r${String(gRow).padStart(4, '0')}_c${String(gCol).padStart(4, '0')}`;
+      const xKm = (DATA.west_km + (c + 0.5) * 9.0).toFixed(1);
+      const yKm = (DATA.north_km - (r + 0.5) * 9.0).toFixed(1);
+      const latDeg = DATA.lat_1d[r] !== undefined ? DATA.lat_1d[r].toFixed(3) : '?';
+      const lonDeg = DATA.lon_1d[c] !== undefined ? DATA.lon_1d[c].toFixed(3) : '?';
+
+      const fmt = (arr, scale, offset = 0, digits = 3) => {
+        const v = arr[idx];
+        return v === 65535 ? 'Missing / NaN' : (v / scale + offset).toFixed(digits);
+      };
+      const land = fmt(grids.land_u16, 10000, 0, 3);
+      const elev = fmt(grids.elev_u16, 1, -500, 1);
+      const flat = fmt(grids.flat_u16, 10000, 0, 3);
+      const pfr = fmt(grids.pfr_u16, 10000, 0, 3);
+      const cov = fmt(grids.cov_u16, 10000, 0, 3);
+      let scr = 'Unscored (Rejected)';
+      if (grids.score_u16[idx] !== 65535 && grids.flat_u16[idx] !== 65535 && grids.pfr_u16[idx] !== 65535) {
+        const fVal = grids.flat_u16[idx] / 10000;
+        const pVal = grids.pfr_u16[idx] / 10000;
+        scr = (flatWeight * fVal + (1 - flatWeight) * pVal).toFixed(4);
+      }
+
+      document.getElementById('cell-readout').innerHTML = `
+        <div class="flex justify-between"><span>Cell ID:</span><span class="font-bold">${cellId}</span></div>
+        <div class="flex justify-between"><span>Lat / Lon:</span><span>${latDeg}&deg;N, ${lonDeg}&deg;E</span></div>
+        <div class="flex justify-between"><span>EPSG:6933 (km):</span><span>(${xKm}, ${yKm})</span></div>
+        <div class="flex justify-between"><span>Land Fraction:</span><span>${land}</span></div>
+        <div class="flex justify-between"><span>Elevation (m):</span><span>${elev}</span></div>
+        <div class="flex justify-between"><span>Flatness (&le;5&deg;):</span><span>${flat}</span></div>
+        <div class="flex justify-between"><span>Permafrost (0-1):</span><span>${pfr}</span></div>
+        <div class="flex justify-between"><span>Valid Coverage:</span><span>${cov}</span></div>
+        <div class="flex justify-between pt-1 border-t border-[var(--border)]"><span>Earth Score:</span><span class="font-bold">${scr}</span></div>
+      `;
+    }
+
+    document.getElementById('weight-slider').addEventListener('input', e => {
+      const pct = Number(e.target.value);
+      flatWeight = pct / 100.0;
+      document.getElementById('weight-label').textContent = `${pct}% Flat / ${100 - pct}% PFR`;
+      const target = selectedCell || hoverCell;
+      if (target) updateInspector(target.r, target.c);
+    });
+
+    document.querySelectorAll('#region-presets button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.region === 'all') {
+          selectedCell = null;
+          fitView();
+          return;
+        }
+        const targetLat = Number(btn.dataset.lat);
+        const targetLon = Number(btn.dataset.lon);
+        const z = Number(btn.dataset.z || 5.0);
+        let bestR = 0, bestC = 0, minDist = 1e9;
+        for (let r = 0; r < DATA.rows; r++) {
+          const d = Math.abs(DATA.lat_1d[r] - targetLat);
+          if (d < minDist) { minDist = d; bestR = r; }
+        }
+        minDist = 1e9;
+        for (let c = 0; c < DATA.cols; c++) {
+          const d = Math.abs(DATA.lon_1d[c] - targetLon);
+          if (d < minDist) { minDist = d; bestC = c; }
+        }
+        const baseScale = Math.min((canvas.width - 32) / DATA.cols, (canvas.height - 32) / DATA.rows);
+        view.scale = baseScale * z;
+        view.tx = canvas.width / 2 - (bestC + 0.5) * view.scale;
+        view.ty = canvas.height / 2 - (bestR + 0.5) * view.scale;
+        selectedCell = { r: bestR, c: bestC };
+        updateInspector(bestR, bestC);
+        draw();
+      });
+    });
+
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+      const factor = e.deltaY < 0 ? 1.25 : 0.8;
+      const newScale = Math.max(0.4, Math.min(60, view.scale * factor));
+      view.tx = mx - (mx - view.tx) * (newScale / view.scale);
+      view.ty = my - (my - view.ty) * (newScale / view.scale);
+      view.scale = newScale;
+      draw();
+    }, { passive: false });
+
+    let dragging = false, lastX = 0, lastY = 0;
+    canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+    window.addEventListener('mouseup', () => { dragging = false; });
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+      if (dragging) {
+        view.tx += (e.clientX - lastX) * (canvas.width / rect.width);
+        view.ty += (e.clientY - lastY) * (canvas.height / rect.height);
+        lastX = e.clientX; lastY = e.clientY;
+        draw();
+        return;
+      }
+      const c = Math.floor((mx - view.tx) / view.scale);
+      const r = Math.floor((my - view.ty) / view.scale);
+      if (r >= 0 && r < DATA.rows && c >= 0 && c < DATA.cols) {
+        hoverCell = { r, c };
+        if (!selectedCell) updateInspector(r, c);
+        draw();
+      }
+    });
+
+    canvas.addEventListener('click', e => {
+      if (hoverCell) {
+        selectedCell = { ...hoverCell };
+        updateInspector(selectedCell.r, selectedCell.c);
+        draw();
+      }
+    });
+
+    document.querySelectorAll('#layer-buttons button[data-layer]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentLayer = btn.dataset.layer;
+        document.querySelectorAll('#layer-buttons button[data-layer]').forEach(b => {
+          b.className = 'px-2.5 py-1 rounded font-medium bg-[var(--card)] border border-[var(--border)]';
+        });
+        btn.className = 'px-2.5 py-1 rounded font-medium bg-[var(--primary)] text-[var(--primary-foreground)]';
+        draw();
+      });
+    });
+
+    document.getElementById('reset-view').addEventListener('click', () => {
+      selectedCell = null;
+      fitView();
+    });
+
+    const topList = document.getElementById('top-list');
+    DATA.top_candidates.forEach(cand => {
+      const item = document.createElement('button');
+      item.className = 'w-full text-left px-2 py-1.5 rounded bg-[var(--background)] hover:bg-[var(--secondary)] border border-[var(--border)] flex items-center justify-between font-mono';
+      item.innerHTML = `<span>#${cand.rank} ${cand.cell_id} (${Number(cand.center_lat_deg).toFixed(2)}°N, ${Number(cand.center_lon_deg).toFixed(2)}°E)</span><span class="font-bold">${Number(cand.score).toFixed(3)}</span>`;
+      item.addEventListener('click', () => {
+        const r = cand.grid_row - DATA.row_start;
+        const c = cand.grid_col - DATA.col_start;
+        selectedCell = { r, c };
+        view.scale = Math.max(view.scale, 8);
+        view.tx = canvas.width / 2 - (c + 0.5) * view.scale;
+        view.ty = canvas.height / 2 - (r + 0.5) * view.scale;
+        updateInspector(r, c);
+        draw();
+      });
+      topList.appendChild(item);
+    });
+
+    Promise.all([
+      ...Object.entries(DATA.layers).map(([k, src]) => new Promise(res => {
+        const img = new Image();
+        img.onload = () => { images[k] = img; res(); };
+        img.src = src;
+      })),
+      ...Object.entries(DATA.packed).map(async ([k, b64]) => {
+        grids[k] = await decompressU16(b64);
+      })
+    ]).then(() => {
+      fitView();
+      if (DATA.top_candidates.length > 0) {
+        const first = DATA.top_candidates[0];
+        updateInspector(first.grid_row - DATA.row_start, first.grid_col - DATA.col_start);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "source_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/27/W/XN/2025/8/S2C_27WXN_20250821_0_L2A/B08.tif",
+  "bbox_wgs84": [
+    -16.794036280310046,
+    65.02833603455359,
+    -16.771963719689957,
+    65.03766396544641
+  ],
+  "dataset_id": "sentinel2_l2a",
+  "site_id": "askja_caldera",
+  "role_in_feature": "primary",
+  "scene_id": "S2C_27WXN_20250821_0_L2A",
+  "band": "nir",
+  "datetime": "2025-08-21T13:03:52.981000Z",
+  "cloud_cover": 0.020474,
+  "local_file": "askja_caldera_S2C_27WXN_20250821_0_L2A_nir.tif",
+  "sha256": "9436d93c7e8f1aa893e1620a739422f8c033d368e509b7389e6b08a5a4239732",
+  "bytes": 9973,
+  "downloaded_utc": "2026-11-14T17:12:33.953276+00:00"
+}

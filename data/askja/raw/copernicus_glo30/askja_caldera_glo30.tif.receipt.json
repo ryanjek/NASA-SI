@@ -1,0 +1,17 @@
+{
+  "source_url": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N65_00_W017_00_DEM/Copernicus_DSM_COG_10_N65_00_W017_00_DEM.tif",
+  "bbox_wgs84": [
+    -16.796795350387555,
+    65.02717004319197,
+    -16.769204649612448,
+    65.03882995680803
+  ],
+  "dataset_id": "copernicus_glo30",
+  "site_id": "askja_caldera",
+  "role_in_feature": "primary",
+  "tile_id": "Copernicus_DSM_COG_10_N65_00_W017_00_DEM",
+  "local_file": "askja_caldera_glo30.tif",
+  "sha256": "00d2393b740958783cacade0ba567db8c34a6f58b4c06f200577e198ddddbb53",
+  "bytes": 6835,
+  "downloaded_utc": "2026-11-14T17:12:21.505669+00:00"
+}

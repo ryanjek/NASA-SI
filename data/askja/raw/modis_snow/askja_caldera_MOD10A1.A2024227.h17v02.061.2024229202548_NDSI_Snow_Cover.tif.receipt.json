@@ -1,0 +1,18 @@
+{
+  "source_url": "https://modiseuwest.blob.core.windows.net/modis-061-cogs/MOD10A1/17/02/2024227/MOD10A1.A2024227.h17v02.061.2024229202548_NDSI_Snow_Cover.tif?st=2026-11-13T17%3A24%3A58Z&se=2026-11-14T18%3A09%3A58Z&sp=rl&sv=2025-07-05&sr=c&skoid=9c8ff44a-6a2c-4dfb-b298-1c9212f64d9a&sktid=72f988bf-86f1-41af-91ab-2d7cd011db47&skt=2026-11-14T15%3A32%3A22Z&ske=2026-11-21T15%3A32%3A22Z&sks=b&skv=2025-07-05&sig=5MYnUX1fofWTmVwLUkNZFoJru3HjcXKFcrwmLNstcrg%3D",
+  "bbox_wgs84": [
+    -16.804223615980856,
+    65.02403083567997,
+    -16.761776384019146,
+    65.04196916432004
+  ],
+  "dataset_id": "modis_snow",
+  "site_id": "askja_caldera",
+  "role_in_feature": "primary",
+  "granule_id": "MOD10A1.A2024227.h17v02.061.2024229202548",
+  "datetime": "2024-08-14T00:00:00.000000Z",
+  "local_file": "askja_caldera_MOD10A1.A2024227.h17v02.061.2024229202548_NDSI_Snow_Cover.tif",
+  "sha256": "04ff07cea38d03b2c54a64d703661fc8a77f7e1fb0f4183150673d0edc931975",
+  "bytes": 965,
+  "downloaded_utc": "2026-11-14T17:25:13.234981+00:00"
+}

@@ -1,0 +1,683 @@
+{
+  "generated_utc": "2026-11-14T12:34:23.639303+00:00",
+  "run_mode": "pilot",
+  "pilot_warning": "PILOT RESULT: Run on a test extent without a final continental polygon mask. Permafrost fraction is a modeled frozen-ground proxy and does not establish ground-ice abundance or landing safety.",
+  "grid": {
+    "crs": "EPSG:6933",
+    "cell_size_m": 9000.0,
+    "subpixels_per_side": 9,
+    "subpixel_size_m": 1000.0,
+    "origin_west_m": -16407000.0,
+    "origin_north_m": 6984000.0,
+    "study_envelope_bbox_deg": [
+      -170.0,
+      14.0,
+      -52.0,
+      72.0
+    ],
+    "requested_bbox_deg": [
+      -149.0,
+      62.0,
+      -146.0,
+      65.0
+    ],
+    "window_row_start": 37,
+    "window_row_stop": 57,
+    "window_col_start": 225,
+    "window_col_stop": 258,
+    "window_bounds_epsg6933_m": [
+      -14382000.0,
+      6471000.0,
+      -14085000.0,
+      6651000.0
+    ]
+  },
+  "mask": {
+    "source": "unmasked_dem_envelope (pilot)",
+    "version": "pilot-unmasked-v1"
+  },
+  "scoring_assumptions": {
+    "status": "provisional_earth_baseline_working_assumptions",
+    "flat_slope_deg": 5.0,
+    "min_coverage": 0.8,
+    "flatness_weight": 0.5,
+    "permafrost_weight": 0.5,
+    "strip_cell_rows": 20,
+    "subpixels_per_side": null,
+    "dem_agg_factor": 10,
+    "verify_sha256": true,
+    "io_threads": 8,
+    "figure_dpi": 240
+  },
+  "summary": {
+    "cells_total": 660,
+    "cells_with_land": 660,
+    "cells_outside_mask": 0,
+    "cells_eligible": 615,
+    "cells_rejected": 45,
+    "land_cells_rejected_low_coverage": 45,
+    "elapsed_seconds": 7.434
+  },
+  "top_10_candidates": [
+    {
+      "rank": 1,
+      "cell_id": "r0048_c0233",
+      "grid_row": 48,
+      "grid_col": 233,
+      "center_x_m": -14305500.0,
+      "center_y_m": 6547500.0,
+      "center_lat_deg": 63.198511,
+      "center_lon_deg": -148.264603,
+      "land_area_fraction": 1.0,
+      "elevation_m": 1027.42,
+      "flatness_fraction": 0.9383,
+      "permafrost_fraction": 0.7595,
+      "input_coverage": 1.0,
+      "eligible": true,
+      "gate_failure": "",
+      "score": 0.8489
+    },
+    {
+      "rank": 2,
+      "cell_id": "r0040_c0225",
+      "grid_row": 40,
+      "grid_col": 225,
+      "center_x_m": -14377500.0,
+      "center_y_m": 6619500.0,
+      "center_lat_deg": 64.464514,
+      "center_lon_deg": -149.010823,
+      "land_area_fraction": 1.0,
+      "elevation_m": 124.69,
+      "flatness_fraction": 1.0,
+      "permafrost_fraction": 0.6379,
+      "input_coverage": 1.0,
+      "eligible": true,
+      "gate_failure": "",
+      "score": 0.819
+    },
+    {
+      "rank": 3,
+      "cell_id": "r0039_c0236",
+      "grid_row": 39,
+      "grid_col": 236,
+      "center_x_m": -14278500.0,
+      "center_y_m": 6628500.0,
+      "center_lat_deg": 64.626872,
+      "center_lon_deg": -147.98477,
+      "land_area_fraction": 1.0,
+      "elevation_m": 135.19,
+      "flatness_fraction": 1.0,
+      "permafrost_fraction": 0.6156,
+      "input_coverage": 1.0,
+      "eligible": true,
+      "gate_failure": "",
+      "score": 0.8078
+    },
+    {
+      "rank": 4,
+      "cell_id": "r0052_c0237",
+      "grid_row": 52,
+      "grid_col": 237,
+      "center_x_m": -14269500.0,
+      "center_y_m": 6511500.0,
+      "center_lat_deg": 62.585769,
+      "center_lon_deg": -147.891493,
+      "land_area_fraction": 1.0,
+      "elevation_m": 1163.08,
+      "flatness_fraction": 0.8272,
+      "permafrost_fraction": 0.7798,
+      "input_coverage": 1.0,
+      "eligible": true,
+      "gate_failure": "",
+      "score": 0.8035
+    },
+    {
+      "rank": 5,
+      "cell_id": "r0040_c0226",
+      "grid_row": 40,
+      "grid_col": 226,
+      "center_x_m": -14368500.0,
+      "center_y_m": 6619500.0,
+      "center_lat_deg": 64.464514,
+      "center_lon_deg": -148.917545,
+      "land_area_fraction": 1.0,
+      "elevation_m": 130.32,
+      "flatness_fraction": 1.0,
+      "permafrost_fraction": 0.5981,
+      "input_coverage": 1.0,
+      "eligible": true,
+      "gate_failure": "",
+      "score": 0.7991
+    },
+    {
+      "rank": 6,
+      "cell_id": "r0040_c0227",
+      "grid_row": 40,
+      "grid_col": 227,
+      "center_x_m": -14359500.0,
+      "center_y_m": 6619500.0,
+      "center_lat_deg": 64.464514,
+      "center_lon_deg": -148.824268,
+      "land_area_fraction": 1.0,
+      "elevation_m": 133.49,
+      "flatness_fraction": 1.0,
+      "permafrost_fraction": 0.5791,
+      "input_coverage": 1.0,
+      "eligible": true,
+      "gate_failure": "",
+      "score": 0.7896
+    },
+    {
+      "rank": 7,
+      "cell_id": "r0052_c0241",
+      "grid_row": 52,
+      "grid_col": 241,
+      "center_x_m": -14233500.0,
+      "center_y_m": 6511500.0,
+      "center_lat_deg": 62.585769,
+      "center_lon_deg": -147.518383,
+      "land_area_fraction": 1.0,
+      "elevation_m": 862.18,
+      "flatness_fraction": 1.0,
+      "permafrost_fraction": 0.5727,
+      "input_coverage": 1.0,
+      "eligible": true,
+      "gate_failure": "",
+      "score": 0.7864
+    },
+    {
+      "rank": 8,
+      "cell_id": "r0054_c0242",
+      "grid_row": 54,
+      "grid_col": 242,
+      "center_x_m": -14224500.0,
+      "center_y_m": 6493500.0,
+      "center_lat_deg": 62.284066,
+      "center_lon_deg": -147.425105,
+      "land_area_fraction": 1.0,
+      "elevation_m": 1171.26,
+      "flatness_fraction": 0.963,
+      "permafrost_fraction": 0.6069,
+      "input_coverage": 1.0,
+      "eligible": true,
+      "gate_failure": "",
+      "score": 0.7849
+    },
+    {
+      "rank": 9,
+      "cell_id": "r0039_c0235",
+      "grid_row": 39,
+      "grid_col": 235,
+      "center_x_m": -14287500.0,
+      "center_y_m": 6628500.0,
+      "center_lat_deg": 64.626872,
+      "center_lon_deg": -148.078048,
+      "land_area_fraction": 1.0,
+      "elevation_m": 132.82,
+      "flatness_fraction": 1.0,
+      "permafrost_fraction": 0.5652,
+      "input_coverage": 1.0,
+      "eligible": true,
+      "gate_failure": "",
+      "score": 0.7826
+    },
+    {
+      "rank": 10,
+      "cell_id": "r0054_c0243",
+      "grid_row": 54,
+      "grid_col": 243,
+      "center_x_m": -14215500.0,
+      "center_y_m": 6493500.0,
+      "center_lat_deg": 62.284066,
+      "center_lon_deg": -147.331828,
+      "land_area_fraction": 1.0,
+      "elevation_m": 1149.97,
+      "flatness_fraction": 0.9012,
+      "permafrost_fraction": 0.6578,
+      "input_coverage": 1.0,
+      "eligible": true,
+      "gate_failure": "",
+      "score": 0.7795
+    }
+  ],
+  "verified_source_metadata": {
+    "terrain_sample": {
+      "filename": "Copernicus_DSM_COG_30_N60_00_W150_00_DEM.tif",
+      "width": 600,
+      "height": 1200,
+      "geotransform": [
+        -150.00083333333333,
+        0.0016666666666666668,
+        0.0,
+        61.000416666666666,
+        0.0,
+        -0.0008333333333333334
+      ],
+      "crs_wkt": "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]",
+      "area_or_point": "Point",
+      "has_nodata": false,
+      "nodata": null,
+      "dem_agg_factor": 10,
+      "aggregated_height_1km": 120,
+      "aggregated_width_1km": 60
+    },
+    "permafrost": {
+      "filename": "ESACCI-PERMAFROST-L4-PFR-MODISLST_CRYOGRID-AREA4_PP-2023-fv05.0.nc",
+      "shape": [
+        1,
+        6000,
+        36000
+      ],
+      "dtype": "uint8",
+      "lat_range_centers_deg": [
+        25.0049991607666,
+        84.99498748779297
+      ],
+      "lon_range_centers_deg": [
+        -179.9949951171875,
+        179.9949951171875
+      ],
+      "dlat_deg": 0.009995,
+      "dlon_deg": 0.010002,
+      "pfr_attributes": {
+        "_FillValue": "[255]",
+        "standard_name": "permafrost_area_fraction",
+        "grid_mapping": "spatial_ref",
+        "units": "percent",
+        "conversion": "no",
+        "valid_min": "[0]",
+        "valid_max": "[100]"
+      },
+      "spatial_ref_attributes": {
+        "_FillValue": "[-2147483647]",
+        "spatial_ref": "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]",
+        "grid_mapping_name": "latitude_longitude",
+        "longitude_of_prime_meridian": "[0.]",
+        "semi_major_axis": "[6378137.]",
+        "inverse_flattening": "[298.25722356]",
+        "GeoTransform": "-180 0.01 0 90 0 -0.01"
+      }
+    }
+  },
+  "inputs": {
+    "inventory_path": "NASA-SI\\data\\earth\\inventory.json",
+    "permafrost": {
+      "filename": "ESACCI-PERMAFROST-L4-PFR-MODISLST_CRYOGRID-AREA4_PP-2023-fv05.0.nc",
+      "url": "https://dap.ceda.ac.uk/neodc/esacci/permafrost/data/permafrost_extent/L4/area4/pp/v05.0/northern_hemisphere/2023/ESACCI-PERMAFROST-L4-PFR-MODISLST_CRYOGRID-AREA4_PP-2023-fv05.0.nc",
+      "product": "ESA Permafrost CCI PFR v5.0",
+      "year": 2023,
+      "sha256": "be024ac8fda10f124932122271d4c41ba2685a0bb1b3c4768866ad382dc50f36",
+      "actual_bytes": 12448396,
+      "downloaded_utc": "2026-11-14T07:33:16.968296+00:00"
+    },
+    "terrain_tiles_used_count": 45,
+    "terrain_tiles_used": [
+      {
+        "filename": "Copernicus_DSM_COG_30_N60_00_W150_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N60_00_W150_00_DEM/Copernicus_DSM_COG_30_N60_00_W150_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "b7f70586b8b4721b409bd890de4744011d72b2fb2a277916289e383d8b64e8f6",
+        "actual_bytes": 2725508,
+        "downloaded_utc": "2026-11-14T09:30:59.369667+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N60_00_W149_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N60_00_W149_00_DEM/Copernicus_DSM_COG_30_N60_00_W149_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "ddc36e145e2d08564e1e5964c9bbab017d162b900505aded57c36020b91c5230",
+        "actual_bytes": 2462630,
+        "downloaded_utc": "2026-11-14T09:30:57.268223+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N60_00_W148_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N60_00_W148_00_DEM/Copernicus_DSM_COG_30_N60_00_W148_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "e219a01a8f1d9a7456fc6f47e8c1906902226e640f3d018e03b8c6d94d8f1602",
+        "actual_bytes": 1004010,
+        "downloaded_utc": "2026-11-14T09:30:52.837413+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N60_00_W147_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N60_00_W147_00_DEM/Copernicus_DSM_COG_30_N60_00_W147_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "e7f591890c1baa199bf3ea72d803989e1d5ed825a62f36a150a2edaedb6764d9",
+        "actual_bytes": 1031414,
+        "downloaded_utc": "2026-11-14T09:30:50.990260+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N60_00_W146_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N60_00_W146_00_DEM/Copernicus_DSM_COG_30_N60_00_W146_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "973dfad43adaa05771ded64bba594d400ea0bac61f29877859cb75908ba21891",
+        "actual_bytes": 1804694,
+        "downloaded_utc": "2026-11-14T09:30:49.411394+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N61_00_W151_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N61_00_W151_00_DEM/Copernicus_DSM_COG_30_N61_00_W151_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "39f61e580e46457238a00367e60ab093c226a457248f9c65b58afb2f5aa64d6d",
+        "actual_bytes": 2301938,
+        "downloaded_utc": "2026-11-14T09:34:37.639506+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N61_00_W150_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N61_00_W150_00_DEM/Copernicus_DSM_COG_30_N61_00_W150_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "10a44222ee78a10b2df7c847894efe510b48557c5645a82f0c5e836d63e513e3",
+        "actual_bytes": 2692255,
+        "downloaded_utc": "2026-11-14T09:34:35.359822+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N61_00_W149_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N61_00_W149_00_DEM/Copernicus_DSM_COG_30_N61_00_W149_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "4488787620eac73100608544280246539becc7e423cae6726c7e26ae576d05e4",
+        "actual_bytes": 2798540,
+        "downloaded_utc": "2026-11-14T09:34:27.230811+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N61_00_W148_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N61_00_W148_00_DEM/Copernicus_DSM_COG_30_N61_00_W148_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "4d6736c4eb5d37f817ab9d0b19e8b8afdd51a9f917f483bfc7c10e8b7970672d",
+        "actual_bytes": 2684090,
+        "downloaded_utc": "2026-11-14T09:34:24.974736+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N61_00_W147_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N61_00_W147_00_DEM/Copernicus_DSM_COG_30_N61_00_W147_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "1005a7a42a93272aa162ccc2e5c8b2f06f918f4faa86797ef4a53a2aa9b92d57",
+        "actual_bytes": 2659487,
+        "downloaded_utc": "2026-11-14T09:34:22.872310+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N61_00_W146_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N61_00_W146_00_DEM/Copernicus_DSM_COG_30_N61_00_W146_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "7533bcda23754698a7cf71921d5580b404ddd114976cb769879903e5139dd7a2",
+        "actual_bytes": 2696824,
+        "downloaded_utc": "2026-11-14T09:34:20.867491+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N61_00_W145_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N61_00_W145_00_DEM/Copernicus_DSM_COG_30_N61_00_W145_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "6afc23289495bf0b5cf06f5e7ecef88b52db4c1194593244d431465d930159e3",
+        "actual_bytes": 2769926,
+        "downloaded_utc": "2026-11-14T09:34:18.696802+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N62_00_W151_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N62_00_W151_00_DEM/Copernicus_DSM_COG_30_N62_00_W151_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "2693be798dd444571087bb3368876742738776119a4d35dcbcaa0f20848d10f2",
+        "actual_bytes": 2814860,
+        "downloaded_utc": "2026-11-14T09:38:15.607551+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N62_00_W150_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N62_00_W150_00_DEM/Copernicus_DSM_COG_30_N62_00_W150_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "75a61642241550bf198588693154698e50eb1a809a7261ab557cc22382f1b925",
+        "actual_bytes": 2785206,
+        "downloaded_utc": "2026-11-14T09:38:13.619329+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N62_00_W149_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N62_00_W149_00_DEM/Copernicus_DSM_COG_30_N62_00_W149_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "5c640bb9f2fbaaf355f742be3fc430c3e7821dc1dfdd3b028aaf8b242ce1782e",
+        "actual_bytes": 2713469,
+        "downloaded_utc": "2026-11-14T09:38:10.809475+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N62_00_W148_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N62_00_W148_00_DEM/Copernicus_DSM_COG_30_N62_00_W148_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "03ac7f11fa00a73a325a4bc06e59c661710ec41d3a58215c0ec3241661eb8e23",
+        "actual_bytes": 2579020,
+        "downloaded_utc": "2026-11-14T09:38:08.778671+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N62_00_W147_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N62_00_W147_00_DEM/Copernicus_DSM_COG_30_N62_00_W147_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "e0581e425b990000609961a1d1e7f361f3b165993141bfaceb42e07405defa0b",
+        "actual_bytes": 2438719,
+        "downloaded_utc": "2026-11-14T09:38:06.782780+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N62_00_W146_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N62_00_W146_00_DEM/Copernicus_DSM_COG_30_N62_00_W146_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "c9b420c1e211aa99c5cb314080f9cc5e360d761637c435b8c3ac231624527394",
+        "actual_bytes": 2455371,
+        "downloaded_utc": "2026-11-14T09:38:04.762770+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N62_00_W145_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N62_00_W145_00_DEM/Copernicus_DSM_COG_30_N62_00_W145_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "4ed89c25dc5f3feb0b8e498a21d66ab112433109cc9a998ca61817c58aaf2461",
+        "actual_bytes": 2567364,
+        "downloaded_utc": "2026-11-14T09:38:02.805574+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N63_00_W151_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N63_00_W151_00_DEM/Copernicus_DSM_COG_30_N63_00_W151_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "5c7d922b2ff9ac0254f6d0cd87ffb7d71775d82b4042059fa725f699ad38a619",
+        "actual_bytes": 2733140,
+        "downloaded_utc": "2026-11-14T09:41:59.480296+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N63_00_W150_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N63_00_W150_00_DEM/Copernicus_DSM_COG_30_N63_00_W150_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "0d3ef2cd97c569fbc79ab65b0949033fdfbdcf4b3c5b550cf21ff814d907d2be",
+        "actual_bytes": 2720520,
+        "downloaded_utc": "2026-11-14T09:41:57.404495+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N63_00_W149_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N63_00_W149_00_DEM/Copernicus_DSM_COG_30_N63_00_W149_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "abe9e2563369c405f378c5229416648489b6ce44de23a674d4417b301141f35e",
+        "actual_bytes": 2699443,
+        "downloaded_utc": "2026-11-14T09:41:55.172342+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N63_00_W148_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N63_00_W148_00_DEM/Copernicus_DSM_COG_30_N63_00_W148_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "28e0ce663cf22043bcad1b1ef2bd547f86914b982553840e4f24743f0533ce8b",
+        "actual_bytes": 2641299,
+        "downloaded_utc": "2026-11-14T09:41:53.041844+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N63_00_W147_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N63_00_W147_00_DEM/Copernicus_DSM_COG_30_N63_00_W147_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "7595c860ed3e99cffb5b1aeea4ab1068c38665b4dc463451b20c5c7ec365b852",
+        "actual_bytes": 2636639,
+        "downloaded_utc": "2026-11-14T09:41:50.862605+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N63_00_W146_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N63_00_W146_00_DEM/Copernicus_DSM_COG_30_N63_00_W146_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "421cd34c06ec199957b5f1c8b110387e87e7f230461ab38ed854073642971e37",
+        "actual_bytes": 2648041,
+        "downloaded_utc": "2026-11-14T09:41:48.803232+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N63_00_W145_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N63_00_W145_00_DEM/Copernicus_DSM_COG_30_N63_00_W145_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "03e716b9428c3bf380076daa2076bd1f34a1c5e6fb319417d87d682030caa2b8",
+        "actual_bytes": 2733602,
+        "downloaded_utc": "2026-11-14T09:41:46.735272+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N64_00_W151_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N64_00_W151_00_DEM/Copernicus_DSM_COG_30_N64_00_W151_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "44613a9eb66b51c3b7eebbc0ebacad8e9953bff6e2cca546ba705260b49fe95f",
+        "actual_bytes": 2746110,
+        "downloaded_utc": "2026-11-14T09:46:13.120413+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N64_00_W150_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N64_00_W150_00_DEM/Copernicus_DSM_COG_30_N64_00_W150_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "e60c88a1fba7f0b60be4838e9a875be36cf01b3a6b7b312de9e483bc860ed278",
+        "actual_bytes": 2685332,
+        "downloaded_utc": "2026-11-14T09:46:10.827255+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N64_00_W149_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N64_00_W149_00_DEM/Copernicus_DSM_COG_30_N64_00_W149_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "a2125e2888be589b9092318d466013b2e30a91f26d4babbcbd0a8cc8dc9f05a3",
+        "actual_bytes": 2683222,
+        "downloaded_utc": "2026-11-14T09:46:05.111184+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N64_00_W148_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N64_00_W148_00_DEM/Copernicus_DSM_COG_30_N64_00_W148_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "8329f88a436a82adff6e7b9126204905ee7ae03f06a41a10863219cc070c4ada",
+        "actual_bytes": 2584450,
+        "downloaded_utc": "2026-11-14T09:46:03.092465+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N64_00_W147_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N64_00_W147_00_DEM/Copernicus_DSM_COG_30_N64_00_W147_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "257c09f383d0b36ad871e09b697baf5d2f131195202d01a09bde7b5a227ce89a",
+        "actual_bytes": 2759256,
+        "downloaded_utc": "2026-11-14T09:46:00.982627+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N64_00_W146_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N64_00_W146_00_DEM/Copernicus_DSM_COG_30_N64_00_W146_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "5837c4e9e97ef7237acfd61d0b1dd45d87f7c313aaa1d4c18389a5f0c4f65f64",
+        "actual_bytes": 2751872,
+        "downloaded_utc": "2026-11-14T09:45:58.889396+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N64_00_W145_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N64_00_W145_00_DEM/Copernicus_DSM_COG_30_N64_00_W145_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "c6b18db65655fc06d3008a2bbe401034c4f8a341ee9a8ddb53b504ba77c1cb69",
+        "actual_bytes": 2736352,
+        "downloaded_utc": "2026-11-14T09:45:56.643217+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N65_00_W151_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N65_00_W151_00_DEM/Copernicus_DSM_COG_30_N65_00_W151_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "0ada5a9c918c44a0867965cbe7cd7c47ccaca1610cc5cf9098fdf09f2aebe1f9",
+        "actual_bytes": 2830348,
+        "downloaded_utc": "2026-11-14T09:51:52.082996+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N65_00_W150_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N65_00_W150_00_DEM/Copernicus_DSM_COG_30_N65_00_W150_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "993c2e9eb0594cca75164e31fde5539cc944285c186ca02520770476a0be94b2",
+        "actual_bytes": 2803150,
+        "downloaded_utc": "2026-11-14T09:51:49.947664+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N65_00_W149_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N65_00_W149_00_DEM/Copernicus_DSM_COG_30_N65_00_W149_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "87393975b16098a481d72cc59cbfc3f1e83ec517e39086845aeb7b419259983f",
+        "actual_bytes": 2780864,
+        "downloaded_utc": "2026-11-14T09:51:44.282996+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N65_00_W148_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N65_00_W148_00_DEM/Copernicus_DSM_COG_30_N65_00_W148_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "1ec47695adbdf54c0ab0b3303d73b97ab6d1e6bdee4115c7b3c528a2e9fbeb4f",
+        "actual_bytes": 2737509,
+        "downloaded_utc": "2026-11-14T09:51:42.201629+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N65_00_W147_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N65_00_W147_00_DEM/Copernicus_DSM_COG_30_N65_00_W147_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "3409dbe47a487a10a2be478c71dd7429feb9dd1b9940baf25cdfe8eb544d936c",
+        "actual_bytes": 2734028,
+        "downloaded_utc": "2026-11-14T09:51:37.370328+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N65_00_W146_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N65_00_W146_00_DEM/Copernicus_DSM_COG_30_N65_00_W146_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "eabbd84e6d954345d2b8c56b1de899f476bf20a519b49c565a2bf9f27cd3f184",
+        "actual_bytes": 2673116,
+        "downloaded_utc": "2026-11-14T09:51:35.252556+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N65_00_W145_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N65_00_W145_00_DEM/Copernicus_DSM_COG_30_N65_00_W145_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "6b71762b884825b5bbc17aa0ed12939b20909787d962293c8c792b729a6893e2",
+        "actual_bytes": 2660429,
+        "downloaded_utc": "2026-11-14T09:51:33.227407+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N66_00_W150_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N66_00_W150_00_DEM/Copernicus_DSM_COG_30_N66_00_W150_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "e936001c44373461f300e580b073592d7012a70e817d29b42cf67635624302f1",
+        "actual_bytes": 2697607,
+        "downloaded_utc": "2026-11-14T09:56:09.676312+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N66_00_W149_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N66_00_W149_00_DEM/Copernicus_DSM_COG_30_N66_00_W149_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "a53f225bd371f2ac64a567943d0533878ef640010b324368b129481de451dabf",
+        "actual_bytes": 2674371,
+        "downloaded_utc": "2026-11-14T09:56:05.944735+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N66_00_W148_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N66_00_W148_00_DEM/Copernicus_DSM_COG_30_N66_00_W148_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "34b1d4c8e6ca1ebbce02264f0c2238c87643e05c05f609f843d7a7aa3e99bb82",
+        "actual_bytes": 2662298,
+        "downloaded_utc": "2026-11-14T09:56:03.327198+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N66_00_W147_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N66_00_W147_00_DEM/Copernicus_DSM_COG_30_N66_00_W147_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "e57e0af911602e668ec0a134db9e8d84bbf7c25facccff714d0c8611ad0ccf1b",
+        "actual_bytes": 2661804,
+        "downloaded_utc": "2026-11-14T09:56:00.225985+00:00"
+      },
+      {
+        "filename": "Copernicus_DSM_COG_30_N66_00_W146_00_DEM.tif",
+        "url": "https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_30_N66_00_W146_00_DEM/Copernicus_DSM_COG_30_N66_00_W146_00_DEM.tif",
+        "product": "Copernicus GLO-90 2021 release",
+        "sha256": "01eea29ec029a6fac01081bbf4b33c6e1a6a5aad0d9167826f61149df55f9efd",
+        "actual_bytes": 2627599,
+        "downloaded_utc": "2026-11-14T09:55:57.787082+00:00"
+      }
+    ]
+  },
+  "outputs": {
+    "cells_csv": "NASA-SI\\data\\earth\\processed\\pilot\\pilot_cells.csv",
+    "screening_png": "NASA-SI\\data\\earth\\processed\\pilot\\pilot_screening.png",
+    "interactive_html": "NASA-SI\\data\\earth\\processed\\pilot\\pilot_interactive.html",
+    "manifest_json": "NASA-SI\\data\\earth\\processed\\pilot\\pilot_manifest.json"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "source_url": "https://sentinel1euwestrtc.blob.core.windows.net/sentinel1-grd-rtc/GRD/2024/8/28/IW/DV/S1A_IW_GRDH_1SDV_20240828T184307_20240828T184332_055417_06C261_7581/measurement/iw-vh.rtc.tiff?st=2026-11-13T17%3A12%3A53Z&se=2026-11-14T17%3A57%3A53Z&sp=rl&sv=2025-07-05&sr=c&skoid=9c8ff44a-6a2c-4dfb-b298-1c9212f64d9a&sktid=72f988bf-86f1-41af-91ab-2d7cd011db47&skt=2026-11-14T16%3A59%3A56Z&ske=2026-11-21T16%3A59%3A56Z&sks=b&skv=2025-07-05&sig=Sq6qI7x5jbeKP4IuWH25vRQ2YTCo%2BFZYkfVZWi35JMA%3D",
+  "bbox_wgs84": [
+    -16.562694733879713,
+    64.94461844109387,
+    -16.53730526612029,
+    64.95538155890614
+  ],
+  "dataset_id": "sentinel1_grd",
+  "site_id": "dyngjusandur_central",
+  "role_in_feature": "alternate",
+  "scene_id": "S1A_IW_GRDH_1SDV_20240828T184307_20240828T184332_055417_06C261_rtc",
+  "polarization": "vh",
+  "datetime": "2024-08-28T18:43:20.395719Z",
+  "local_file": "dyngjusandur_central_S1A_IW_GRDH_1SDV_20240828T184307_20240828T184332_055417_06C261_rtc_vh.tif",
+  "sha256": "47b00d2a71c7cd714989acddd84932d70629ce79bb3eb78c36a6f5b952a19b72",
+  "bytes": 55331,
+  "downloaded_utc": "2026-11-14T17:13:00.704805+00:00"
+}

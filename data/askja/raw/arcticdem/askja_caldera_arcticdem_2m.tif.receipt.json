@@ -1,0 +1,17 @@
+{
+  "source_url": "https://pgc-opendata-dems.s3.us-west-2.amazonaws.com/arcticdem/mosaics/v4.1/2m/16_53/16_53_2_2_2m_v4.1_dem.tif",
+  "bbox_wgs84": [
+    -16.796795350387555,
+    65.02717004319197,
+    -16.769204649612448,
+    65.03882995680803
+  ],
+  "dataset_id": "arcticdem",
+  "site_id": "askja_caldera",
+  "role_in_feature": "alternate",
+  "stac_item_id": "16_53_2_2_2m_v4.1",
+  "local_file": "askja_caldera_arcticdem_2m.tif",
+  "sha256": "e1d89f815ff7a51716f433f84b6c14b2af1cafd166d79d03e740f71f97fcd2b7",
+  "bytes": 769230,
+  "downloaded_utc": "2026-11-14T17:12:26.096225+00:00"
+}

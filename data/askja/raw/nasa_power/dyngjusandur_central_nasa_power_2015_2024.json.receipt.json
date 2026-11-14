@@ -1,0 +1,11 @@
+{
+  "dataset_id": "nasa_power",
+  "site_id": "dyngjusandur_central",
+  "role_in_feature": "primary",
+  "source_url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M,PRECTOTCORR,RH2M&community=RE&longitude=-16.55&latitude=64.95&start=20150101&end=20241231&format=JSON",
+  "temporal_range": "2015-01-01 to 2024-12-31",
+  "local_file": "dyngjusandur_central_nasa_power_2015_2024.json",
+  "sha256": "abbe22c42688b31fab1e9e8473ed1a5f0a971e95c63131b6adef3f746da045f0",
+  "bytes": 181231,
+  "downloaded_utc": "2026-11-14T17:18:29.580791+00:00"
+}

@@ -1,0 +1,20 @@
+{
+  "source_url": "https://landsateuwest.blob.core.windows.net/landsat-c2/level-2/standard/oli-tirs/2025/219/014/LC08_L2SP_219014_20250614_20250626_02_T1/LC08_L2SP_219014_20250614_20250626_02_T1_QA_PIXEL.TIF?st=2026-11-13T17%3A12%3A41Z&se=2026-11-14T17%3A57%3A41Z&sp=rl&sv=2025-07-05&sr=c&skoid=9c8ff44a-6a2c-4dfb-b298-1c9212f64d9a&sktid=72f988bf-86f1-41af-91ab-2d7cd011db47&skt=2026-11-14T17%3A05%3A21Z&ske=2026-11-21T17%3A05%3A21Z&sks=b&skv=2025-07-05&sig=TAySjAHs%2Bi2gXnxsPCagXgarNQQYWtnRIlVNb/Emx60%3D",
+  "bbox_wgs84": [
+    -16.794248516469853,
+    65.02824634291038,
+    -16.77175148353015,
+    65.03775365708962
+  ],
+  "dataset_id": "landsat_c2",
+  "site_id": "askja_caldera",
+  "role_in_feature": "alternate",
+  "scene_id": "LC08_L2SP_219014_20250614_02_T1",
+  "band": "qa_pixel",
+  "datetime": "2025-06-14T12:39:16.981069Z",
+  "cloud_cover": 3.19,
+  "local_file": "askja_caldera_LC08_L2SP_219014_20250614_02_T1_qa_pixel.tif",
+  "sha256": "86270f6da1e14eaa0416c7f6e7cf5e24846a3912dbcb4eab7e8b961e7d72f8a2",
+  "bytes": 737,
+  "downloaded_utc": "2026-11-14T17:12:44.482473+00:00"
+}

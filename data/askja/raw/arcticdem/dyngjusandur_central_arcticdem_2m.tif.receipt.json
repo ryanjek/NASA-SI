@@ -1,0 +1,17 @@
+{
+  "source_url": "https://pgc-opendata-dems.s3.us-west-2.amazonaws.com/arcticdem/mosaics/v4.1/2m/16_54/16_54_2_1_2m_v4.1_dem.tif",
+  "bbox_wgs84": [
+    -16.563752628369688,
+    64.94416997785169,
+    -16.536247371630314,
+    64.95583002214832
+  ],
+  "dataset_id": "arcticdem",
+  "site_id": "dyngjusandur_central",
+  "role_in_feature": "alternate",
+  "stac_item_id": "16_54_2_1_2m_v4.1",
+  "local_file": "dyngjusandur_central_arcticdem_2m.tif",
+  "sha256": "eebcdcdd2cf512272e18a6a7173eb203f9cdb00d0c817c70282c1135bf83e51a",
+  "bytes": 1019299,
+  "downloaded_utc": "2026-11-14T17:12:28.008809+00:00"
+}

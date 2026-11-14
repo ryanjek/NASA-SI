@@ -1,0 +1,17 @@
+{
+  "source_url": "https://modiseuwest.blob.core.windows.net/modis-061-cogs/MOD11A1/17/02/2024215/MOD11A1.A2024215.h17v02.061.2024221181530_LST_Day_1km.tif?st=2026-11-13T17%3A17%3A30Z&se=2026-11-14T18%3A02%3A30Z&sp=rl&sv=2025-07-05&sr=c&skoid=9c8ff44a-6a2c-4dfb-b298-1c9212f64d9a&sktid=72f988bf-86f1-41af-91ab-2d7cd011db47&skt=2026-11-14T15%3A33%3A53Z&ske=2026-11-21T15%3A33%3A53Z&sks=b&skv=2025-07-05&sig=agnd8fi41s67FpaGXdv7kNvI1vw2QM4%2BiVXoZRFWxOY%3D",
+  "bbox_wgs84": [
+    -16.58173683469928,
+    64.93654610273465,
+    -16.51826316530072,
+    64.96345389726535
+  ],
+  "dataset_id": "modis_lst",
+  "site_id": "dyngjusandur_central",
+  "season": "summer",
+  "granule_id": "MOD11A1.A2024215.h17v02.061.2024221181530",
+  "local_file": "dyngjusandur_central_MOD11A1.A2024215.h17v02.061.2024221181530_summer_LST_Day_1km.tif",
+  "sha256": "7ca9abadb69be7a4f95660e4a258dd3882213e4fcac0a282f23722a2a5e8c5fd",
+  "bytes": 1219,
+  "downloaded_utc": "2026-11-14T17:18:25.934659+00:00"
+}

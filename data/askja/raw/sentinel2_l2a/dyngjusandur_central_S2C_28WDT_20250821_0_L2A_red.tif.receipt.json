@@ -1,0 +1,20 @@
+{
+  "source_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/28/W/DT/2025/8/S2C_28WDT_20250821_0_L2A/B04.tif",
+  "bbox_wgs84": [
+    -16.561002102695753,
+    64.94533598228135,
+    -16.53899789730425,
+    64.95466401771866
+  ],
+  "dataset_id": "sentinel2_l2a",
+  "site_id": "dyngjusandur_central",
+  "role_in_feature": "primary",
+  "scene_id": "S2C_28WDT_20250821_0_L2A",
+  "band": "red",
+  "datetime": "2025-08-21T13:03:47.493000Z",
+  "cloud_cover": 0,
+  "local_file": "dyngjusandur_central_S2C_28WDT_20250821_0_L2A_red.tif",
+  "sha256": "ffa2d6741e56d622a7b1fc50ac325b76aacd134ce02b28d4f2eb0ea8ceef907c",
+  "bytes": 16163,
+  "downloaded_utc": "2026-11-14T17:12:37.151302+00:00"
+}

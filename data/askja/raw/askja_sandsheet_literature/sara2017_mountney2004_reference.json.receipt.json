@@ -1,0 +1,9 @@
+{
+  "dataset_id": "askja_sandsheet_literature",
+  "role_in_feature": "reference_only",
+  "source_url": "https://www.hou.usra.edu/meetings/lpsc2017/pdf/2638.pdf",
+  "local_file": "sara2017_mountney2004_reference.json",
+  "sha256": "860f70e1d42e971f20742ad5f355b2b0c7237f6f2a2d51e0d3ab5e7a06111330",
+  "bytes": 589,
+  "downloaded_utc": "2026-11-14T17:25:18.299415+00:00"
+}

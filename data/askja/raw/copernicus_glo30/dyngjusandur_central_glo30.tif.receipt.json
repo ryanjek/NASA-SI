@@ -1,0 +1,17 @@
+{
+  "source_url": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N64_00_W017_00_DEM/Copernicus_DSM_COG_10_N64_00_W017_00_DEM.tif",
+  "bbox_wgs84": [
+    -16.563752628369688,
+    64.94416997785169,
+    -16.536247371630314,
+    64.95583002214832
+  ],
+  "dataset_id": "copernicus_glo30",
+  "site_id": "dyngjusandur_central",
+  "role_in_feature": "primary",
+  "tile_id": "Copernicus_DSM_COG_10_N64_00_W017_00_DEM",
+  "local_file": "dyngjusandur_central_glo30.tif",
+  "sha256": "e43c71c797e34d5b665b2663ff2929a799c2997eca49acf951707024ec902805",
+  "bytes": 11715,
+  "downloaded_utc": "2026-11-14T17:12:22.979444+00:00"
+}

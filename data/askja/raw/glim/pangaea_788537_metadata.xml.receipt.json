@@ -1,0 +1,10 @@
+{
+  "dataset_id": "glim",
+  "role_in_feature": "primary",
+  "source_url": "https://ws.pangaea.de/oai/provider?verb=GetRecord&metadataPrefix=oai_dc&identifier=oai:pangaea.de:doi:10.1594/PANGAEA.788537",
+  "doi": "10.1594/PANGAEA.788537",
+  "local_file": "pangaea_788537_metadata.xml",
+  "sha256": "c83b702e82211c65f1f4024d2225b67f73b7d97aba9dfdc684ba66289d7e0f1e",
+  "bytes": 3414,
+  "downloaded_utc": "2026-11-14T17:25:18.298114+00:00"
+}

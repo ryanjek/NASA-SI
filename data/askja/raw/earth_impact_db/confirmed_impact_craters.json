@@ -1,0 +1,91 @@
+{
+  "dataset_id": "earth_impact_db",
+  "source_url": "https://www.passc.net/EarthImpactDatabase/index.html",
+  "note": "Confirmed terrestrial impact craters in Northern Europe, Arctic, and North Atlantic region used for geodesic minimum distance calculation.",
+  "craters": [
+    {
+      "name": "Lappaj\u00e4rvi (Finland)",
+      "lat": 63.15,
+      "lon": 23.6833,
+      "diam_km": 23.0
+    },
+    {
+      "name": "Dellen (Sweden)",
+      "lat": 61.85,
+      "lon": 16.7,
+      "diam_km": 19.0
+    },
+    {
+      "name": "Gardnos (Norway)",
+      "lat": 60.65,
+      "lon": 9.0,
+      "diam_km": 5.0
+    },
+    {
+      "name": "Siljan (Sweden)",
+      "lat": 61.0333,
+      "lon": 14.9167,
+      "diam_km": 52.0
+    },
+    {
+      "name": "Lockne (Sweden)",
+      "lat": 63.0056,
+      "lon": 14.8194,
+      "diam_km": 7.5
+    },
+    {
+      "name": "M\u00e5lingen (Sweden)",
+      "lat": 62.9194,
+      "lon": 14.5694,
+      "diam_km": 0.7
+    },
+    {
+      "name": "Ritland (Norway)",
+      "lat": 59.2333,
+      "lon": 6.4167,
+      "diam_km": 2.7
+    },
+    {
+      "name": "Mj\u00f8lnir (Barents Sea, Norway)",
+      "lat": 73.8,
+      "lon": 29.6667,
+      "diam_km": 40.0
+    },
+    {
+      "name": "Suavj\u00e4rvi (Russia)",
+      "lat": 63.1167,
+      "lon": 33.3833,
+      "diam_km": 16.0
+    },
+    {
+      "name": "J\u00e4nisj\u00e4rvi (Russia)",
+      "lat": 61.9667,
+      "lon": 30.9167,
+      "diam_km": 14.0
+    },
+    {
+      "name": "Haughton (Devon Island, Canada)",
+      "lat": 75.377222,
+      "lon": -89.68,
+      "diam_km": 23.0
+    },
+    {
+      "name": "Manicouagan (Quebec, Canada)",
+      "lat": 51.3833,
+      "lon": -68.7,
+      "diam_km": 100.0
+    },
+    {
+      "name": "Rochechouart (France)",
+      "lat": 45.8242,
+      "lon": 0.7817,
+      "diam_km": 23.0
+    },
+    {
+      "name": "N\u00f6rdlinger Ries (Germany)",
+      "lat": 48.8833,
+      "lon": 10.6167,
+      "diam_km": 24.0
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "source_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/28/W/DT/2025/8/S2C_28WDT_20250821_0_L2A/B04.tif",
+  "bbox_wgs84": [
+    -16.794036280310046,
+    65.02833603455359,
+    -16.771963719689957,
+    65.03766396544641
+  ],
+  "dataset_id": "sentinel2_l2a",
+  "site_id": "askja_caldera",
+  "role_in_feature": "primary",
+  "scene_id": "S2C_28WDT_20250821_0_L2A",
+  "band": "red",
+  "datetime": "2025-08-21T13:03:47.493000Z",
+  "cloud_cover": 0,
+  "local_file": "askja_caldera_S2C_28WDT_20250821_0_L2A_red.tif",
+  "sha256": "731881738941568c10c62420dd75dfedd0a0e1e659845b8c3e8bb9741d9f6bcc",
+  "bytes": 16784,
+  "downloaded_utc": "2026-11-14T17:12:30.845858+00:00"
+}

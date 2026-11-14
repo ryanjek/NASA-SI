@@ -1,0 +1,11 @@
+{
+  "dataset_id": "nasa_power",
+  "site_id": "askja_caldera",
+  "role_in_feature": "primary",
+  "source_url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M,PRECTOTCORR,RH2M&community=RE&longitude=-16.783&latitude=65.033&start=20150101&end=20241231&format=JSON",
+  "temporal_range": "2015-01-01 to 2024-12-31",
+  "local_file": "askja_caldera_nasa_power_2015_2024.json",
+  "sha256": "32e50b4ab34e1acc864ed96e4ae0267f8eba0b994c662ac652a061c8dc4003e9",
+  "bytes": 181386,
+  "downloaded_utc": "2026-11-14T17:18:28.102780+00:00"
+}

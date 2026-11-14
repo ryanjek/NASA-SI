@@ -1,0 +1,9 @@
+{
+  "dataset_id": "glim",
+  "role_in_feature": "primary",
+  "source_url": "https://doi.pangaea.de/10.1594/PANGAEA.788537",
+  "local_file": "askja_glim_50km.json",
+  "sha256": "ca81c45639819d3cc03319a6aa00f80ac33118499b69e7e32e5df28841574971",
+  "bytes": 736,
+  "downloaded_utc": "2026-11-14T17:25:18.298501+00:00"
+}

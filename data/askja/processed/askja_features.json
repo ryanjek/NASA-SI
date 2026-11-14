@@ -1,0 +1,228 @@
+{
+  "askja_caldera": {
+    "site_metadata": {
+      "site_id": "askja_caldera",
+      "name": "Askja caldera summit (sites.geojson published point)",
+      "site_role": "context_region",
+      "transferable_to_similarity_search": false,
+      "lat": 65.033,
+      "lon": -16.783,
+      "published_elev_m": 1516.0,
+      "window_m": 1000.0
+    },
+    "bbox_1km_wgs84": [
+      -16.793611807990427,
+      65.02851541783998,
+      -16.772388192009576,
+      65.03748458216002
+    ],
+    "primary_features": {
+      "elev_m": 1055.5,
+      "slope_median_deg": 0.0,
+      "slope_p95_deg": 24.18,
+      "relief_1km_m": 53.31,
+      "tri_100m": 2.08,
+      "ndvi_summer_median": 0.0086,
+      "bare_fraction": 0.9912,
+      "snow_persistence": 0.8591,
+      "lst_summer_max_c": 10.13,
+      "lst_winter_min_c": -23.65,
+      "air_temp_days_above_0c": 136.4,
+      "precip_mm_yr": 860.5,
+      "humidity_mean_pct": 94.1,
+      "glim_lithology": "vb",
+      "emit_clay_fraction": null,
+      "emit_sulfate_fraction": null,
+      "emit_iron_fraction": null,
+      "impact_distance_km": 1361.04
+    },
+    "alternate_features": {
+      "elev_m": 1123.56,
+      "slope_median_deg": 0.16,
+      "slope_p95_deg": 20.08,
+      "relief_1km_m": 65.63,
+      "tri_100m": "1.77 m (ArcticDEM 2m) | 2.03 dB (Sentinel-1 VV std)",
+      "ndvi_summer_median": -0.2182,
+      "bare_fraction": 1.0
+    },
+    "dataset_diagnostics": {
+      "copernicus_glo30": {
+        "elev_m": 1055.5,
+        "slope_median_deg": 0.0,
+        "slope_p95_deg": 24.175257010956066,
+        "relief_1km_m": 53.31185302734366,
+        "tri_100m": 2.076095007040889,
+        "valid_pixels": 1216,
+        "pixel_size_m": 28.57
+      },
+      "arcticdem": {
+        "elev_m": 1123.5625,
+        "slope_median_deg": 0.15825832497857711,
+        "slope_p95_deg": 20.08187227451628,
+        "relief_1km_m": 65.6328125,
+        "tri_100m": 1.774729588549578,
+        "valid_pixels": 474721,
+        "pixel_size_m": 2.0
+      },
+      "sentinel2_l2a": {
+        "ndvi_summer_median": 0.008638243140290634,
+        "bare_fraction": 0.9911764705882353,
+        "scenes_used": 3,
+        "valid_land_pixels_10m": 1360,
+        "total_grid_pixels_10m": 10000
+      },
+      "landsat_c2": {
+        "ndvi_summer_median": -0.21823678954626335,
+        "bare_fraction": 1.0,
+        "scenes_used": 3,
+        "valid_land_pixels_30m": 109,
+        "total_grid_pixels_30m": 1089
+      },
+      "sentinel1_grd": {
+        "vv_median_db": -20.53140471097288,
+        "vh_median_db": -23.779694013376456,
+        "radar_roughness_100m_db": 2.032793275650133
+      },
+      "modis_snow": {
+        "snow_persistence": 0.859090909090909,
+        "clear_sky_dates": 10,
+        "total_dates_sampled": 26
+      },
+      "modis_lst": {
+        "lst_summer_max_c": 10.130000000000052,
+        "lst_winter_min_c": -23.649999999999977,
+        "valid_summer_granules": 6,
+        "valid_winter_granules": 7
+      },
+      "nasa_power": {
+        "air_temp_days_above_0c": 136.4,
+        "precip_mm_yr": 860.5,
+        "humidity_mean_pct": 94.1,
+        "years_averaged": 10
+      },
+      "glim": {
+        "xx": "vb",
+        "lithology_class": "vb (Basic volcanics)",
+        "description": "Neogene-Quaternary basaltic and intermediate volcanic rocks of the Northern Volcanic Zone, Iceland",
+        "majority_fraction_50km": 0.96
+      },
+      "earth_impact_db": {
+        "impact_distance_km": 1361.04,
+        "nearest_crater": "Ritland (Norway)"
+      }
+    }
+  },
+  "dyngjusandur_central": {
+    "site_metadata": {
+      "site_id": "dyngjusandur_central",
+      "name": "Dyngjusandur central inflating basaltic sand sheet (Stimson analog seed)",
+      "site_role": "science_subregion",
+      "transferable_to_similarity_search": true,
+      "lat": 64.95,
+      "lon": -16.55,
+      "published_elev_m": null,
+      "window_m": 1000.0
+    },
+    "bbox_1km_wgs84": [
+      -16.56057894489976,
+      64.94551536757822,
+      -16.53942105510024,
+      64.95448463242178
+    ],
+    "primary_features": {
+      "elev_m": 674.64,
+      "slope_median_deg": 1.34,
+      "slope_p95_deg": 3.05,
+      "relief_1km_m": 11.19,
+      "tri_100m": 0.83,
+      "ndvi_summer_median": -0.0396,
+      "bare_fraction": 1.0,
+      "snow_persistence": 0.398,
+      "lst_summer_max_c": 35.75,
+      "lst_winter_min_c": -24.93,
+      "air_temp_days_above_0c": 146.2,
+      "precip_mm_yr": 930.3,
+      "humidity_mean_pct": 93.8,
+      "glim_lithology": "vb",
+      "emit_clay_fraction": null,
+      "emit_sulfate_fraction": null,
+      "emit_iron_fraction": null,
+      "impact_distance_km": 1347.77
+    },
+    "alternate_features": {
+      "elev_m": 740.88,
+      "slope_median_deg": 1.28,
+      "slope_p95_deg": 3.84,
+      "relief_1km_m": 21.93,
+      "tri_100m": "0.82 m (ArcticDEM 2m) | 1.70 dB (Sentinel-1 VV std)",
+      "ndvi_summer_median": -0.0338,
+      "bare_fraction": 1.0
+    },
+    "dataset_diagnostics": {
+      "copernicus_glo30": {
+        "elev_m": 674.6434631347656,
+        "slope_median_deg": 1.34244267063367,
+        "slope_p95_deg": 3.045416347873932,
+        "relief_1km_m": 11.187475585937477,
+        "tri_100m": 0.8328477129852295,
+        "valid_pixels": 1216,
+        "pixel_size_m": 28.61
+      },
+      "arcticdem": {
+        "elev_m": 740.8828125,
+        "slope_median_deg": 1.2757117998086565,
+        "slope_p95_deg": 3.839960010379425,
+        "relief_1km_m": 21.9296875,
+        "tri_100m": 0.8168052985714468,
+        "valid_pixels": 476100,
+        "pixel_size_m": 2.0
+      },
+      "sentinel2_l2a": {
+        "ndvi_summer_median": -0.03960915889452119,
+        "bare_fraction": 1.0,
+        "scenes_used": 3,
+        "valid_land_pixels_10m": 9294,
+        "total_grid_pixels_10m": 10000
+      },
+      "landsat_c2": {
+        "ndvi_summer_median": -0.03384108338134073,
+        "bare_fraction": 1.0,
+        "scenes_used": 2,
+        "valid_land_pixels_30m": 1089,
+        "total_grid_pixels_30m": 1089
+      },
+      "sentinel1_grd": {
+        "vv_median_db": -16.859533108476406,
+        "vh_median_db": -22.916143811123288,
+        "radar_roughness_100m_db": 1.7023975273160572
+      },
+      "modis_snow": {
+        "snow_persistence": 0.3980392156862745,
+        "clear_sky_dates": 9,
+        "total_dates_sampled": 26
+      },
+      "modis_lst": {
+        "lst_summer_max_c": 35.75000000000006,
+        "lst_winter_min_c": -24.92999999999998,
+        "valid_summer_granules": 5,
+        "valid_winter_granules": 7
+      },
+      "nasa_power": {
+        "air_temp_days_above_0c": 146.2,
+        "precip_mm_yr": 930.3,
+        "humidity_mean_pct": 93.8,
+        "years_averaged": 10
+      },
+      "glim": {
+        "xx": "vb",
+        "lithology_class": "vb (Basic volcanics)",
+        "description": "Holocene-Pleistocene basaltic lavas and volcaniclastic/eolian basaltic sand sheet in the Askja-Dyngjufj\u00f6ll volcanic system",
+        "majority_fraction_50km": 0.96
+      },
+      "earth_impact_db": {
+        "impact_distance_km": 1347.77,
+        "nearest_crater": "Ritland (Norway)"
+      }
+    }
+  }
+}

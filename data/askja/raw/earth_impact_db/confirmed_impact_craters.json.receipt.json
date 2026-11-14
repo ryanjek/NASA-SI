@@ -1,0 +1,9 @@
+{
+  "dataset_id": "earth_impact_db",
+  "role_in_feature": "primary",
+  "source_url": "https://www.passc.net/EarthImpactDatabase/index.html",
+  "local_file": "confirmed_impact_craters.json",
+  "sha256": "e35f0e15d7fd6a117bb91f00f61e8e9df9d69528c22ea3cc5fa750907dd1294c",
+  "bytes": 1937,
+  "downloaded_utc": "2026-11-14T17:25:18.298974+00:00"
+}

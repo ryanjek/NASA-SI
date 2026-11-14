@@ -1,0 +1,20 @@
+{
+  "dataset_id": "glim",
+  "name": "Global Lithological Map database v1.0 (Hartmann & Moosdorf 2012)",
+  "doi": "10.1594/PANGAEA.788537",
+  "spatial_window_m": 50000,
+  "sites": {
+    "askja_caldera": {
+      "xx": "vb",
+      "lithology_class": "vb (Basic volcanics)",
+      "description": "Neogene-Quaternary basaltic and intermediate volcanic rocks of the Northern Volcanic Zone, Iceland",
+      "majority_fraction_50km": 0.96
+    },
+    "dyngjusandur_central": {
+      "xx": "vb",
+      "lithology_class": "vb (Basic volcanics)",
+      "description": "Holocene-Pleistocene basaltic lavas and volcaniclastic/eolian basaltic sand sheet in the Askja-Dyngjufj\u00f6ll volcanic system",
+      "majority_fraction_50km": 0.96
+    }
+  }
+}

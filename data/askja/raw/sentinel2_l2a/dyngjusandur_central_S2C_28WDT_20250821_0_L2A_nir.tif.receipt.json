@@ -1,0 +1,20 @@
+{
+  "source_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/28/W/DT/2025/8/S2C_28WDT_20250821_0_L2A/B08.tif",
+  "bbox_wgs84": [
+    -16.561002102695753,
+    64.94533598228135,
+    -16.53899789730425,
+    64.95466401771866
+  ],
+  "dataset_id": "sentinel2_l2a",
+  "site_id": "dyngjusandur_central",
+  "role_in_feature": "primary",
+  "scene_id": "S2C_28WDT_20250821_0_L2A",
+  "band": "nir",
+  "datetime": "2025-08-21T13:03:47.493000Z",
+  "cloud_cover": 0,
+  "local_file": "dyngjusandur_central_S2C_28WDT_20250821_0_L2A_nir.tif",
+  "sha256": "2aaac493cc10739b021f32d85166e798b50151ee58e40772aa6f9b02381d5d0b",
+  "bytes": 16078,
+  "downloaded_utc": "2026-11-14T17:12:37.481981+00:00"
+}
