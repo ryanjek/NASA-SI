@@ -1,0 +1,36 @@
+[project]
+name = "nasa-si"
+version = "0.1.0"
+description = "Explainable geospatial screening for Mars landing-site analogs"
+readme = "README.md"
+authors = [
+    { name = "ryanjek", email = "ryanngjekhian@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "healpy>=1.20.1",
+    "matplotlib>=3.10.7",
+    "numpy>=2.3.4",
+    "rasterio>=1.4.3",
+]
+
+[project.optional-dependencies]
+earth = [
+    "pyhdf>=0.11",
+]
+
+[project.scripts]
+nasa-si = "nasa_si.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"

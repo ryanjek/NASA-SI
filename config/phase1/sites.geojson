@@ -1,0 +1,168 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          160.716667,
+          -77.863333
+        ]
+      },
+      "properties": {
+        "site_id": "university_valley",
+        "name": "University Valley",
+        "analog_family": "mcmurdo",
+        "site_role": "science_subregion",
+        "coordinate_status": "published_conflict",
+        "transferable_to_similarity_search": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          160.65,
+          -77.816667
+        ]
+      },
+      "properties": {
+        "site_id": "beacon_central_polygon",
+        "name": "Central Beacon Valley polygon site",
+        "analog_family": "mcmurdo",
+        "site_role": "science_subregion",
+        "coordinate_status": "published_conflict",
+        "transferable_to_similarity_search": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -16.783,
+          65.033
+        ]
+      },
+      "properties": {
+        "site_id": "askja_caldera",
+        "name": "Askja caldera summit",
+        "analog_family": "askja",
+        "site_role": "context_region",
+        "coordinate_status": "published_point",
+        "transferable_to_similarity_search": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -155.487192,
+          19.602378
+        ]
+      },
+      "properties": {
+        "site_id": "hiseas_habitat",
+        "name": "HI-SEAS habitat",
+        "analog_family": "mauna_loa",
+        "site_role": "operations_facility",
+        "coordinate_status": "published_point",
+        "transferable_to_similarity_search": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -155.487192,
+          19.602378
+        ]
+      },
+      "properties": {
+        "site_id": "hiseas_pahoehoe_radius",
+        "name": "Pahoehoe sample radius around HI-SEAS",
+        "analog_family": "mauna_loa",
+        "site_role": "science_subregion",
+        "coordinate_status": "approximate_buffer",
+        "transferable_to_similarity_search": true,
+        "buffer_m": 6000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -89.68,
+          75.377222
+        ]
+      },
+      "properties": {
+        "site_id": "haughton",
+        "name": "Haughton impact structure",
+        "analog_family": "haughton",
+        "site_role": "context_region",
+        "coordinate_status": "published_point",
+        "transferable_to_similarity_search": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -89.76,
+          75.420833
+        ]
+      },
+      "properties": {
+        "site_id": "drill_hill",
+        "name": "Drill Hill",
+        "analog_family": "haughton",
+        "site_role": "science_subregion",
+        "coordinate_status": "published_point",
+        "transferable_to_similarity_search": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -89.824458,
+          75.431219
+        ]
+      },
+      "properties": {
+        "site_id": "fmars",
+        "name": "Flashline Mars Arctic Research Station",
+        "analog_family": "haughton",
+        "site_role": "operations_facility",
+        "coordinate_status": "published_point",
+        "transferable_to_similarity_search": false
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -89.866667,
+          75.433333
+        ]
+      },
+      "properties": {
+        "site_id": "hmprs",
+        "name": "Haughton-Mars Project Research Station",
+        "analog_family": "haughton",
+        "site_role": "operations_facility",
+        "coordinate_status": "published_point",
+        "transferable_to_similarity_search": false
+      }
+    }
+  ]
+}
