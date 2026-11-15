@@ -73,6 +73,12 @@ def _screen_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _prefilter_command(args: argparse.Namespace) -> int:
+    from .prefilter import run_cli
+
+    return run_cli(args)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="nasa-si",
@@ -149,6 +155,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="minimum distance between reported candidates (default: 150)",
     )
     screen.set_defaults(handler=_screen_command)
+
+    prefilter = subparsers.add_parser(
+        "prefilter",
+        help="Stage 1 of the Earth search: prune ~50 km patches that cannot match a Phase 1 seed",
+    )
+    prefilter.add_argument("--raw", type=Path, default=Path("data/raw/global"), help="folder with MODIS monthly files")
+    prefilter.add_argument("--out", type=Path, default=Path("data/processed/prefilter"))
+    prefilter.add_argument(
+        "--seed",
+        action="append",
+        metavar="SITE_ID",
+        help="a located Phase 1 seed (repeatable); default: all of them",
+    )
+    prefilter.add_argument("--months", help="comma-separated calendar months to use, for example 1,7")
+    prefilter.set_defaults(handler=_prefilter_command)
 
     return parser
 
