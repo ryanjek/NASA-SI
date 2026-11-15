@@ -54,19 +54,123 @@ def patch_grid(lat: float, lon: float, size_m: float = 1000, resolution_m: float
                 (west,south,east,north), effective_res)
 
 
+# --- Optional run context (metrics + batched I/O). ---
+# With no context set (the default, e.g. Phase 2 direct calls) every function below
+# behaves exactly as before: one STAC client per call site, one open per raster read.
+import threading as _threading
+import time as _time
+from contextlib import contextmanager as _contextmanager
+
+_GDAL_ENV = dict(GDAL_DISABLE_READDIR_ON_OPEN='EMPTY_DIR', CPL_VSIL_CURL_ALLOWED_EXTENSIONS='.tif,.TIF,.tiff')
+
+
+class RunMetrics:
+    """Thread-safe counters and summed elapsed seconds (summed across threads)."""
+
+    def __init__(self):
+        self._lock = _threading.Lock()
+        self.counters: dict[str, int] = {}
+        self.timers: dict[str, float] = {}
+
+    def add(self, name: str, n: int = 1) -> None:
+        with self._lock:
+            self.counters[name] = self.counters.get(name, 0) + n
+
+    def add_time(self, name: str, seconds: float) -> None:
+        with self._lock:
+            self.timers[name] = self.timers.get(name, 0.0) + seconds
+
+    @_contextmanager
+    def timed(self, name: str):
+        t0 = _time.perf_counter()
+        try:
+            yield
+        finally:
+            self.add_time(name, _time.perf_counter() - t0)
+
+    def snapshot(self) -> dict:
+        with self._lock:
+            return {'counters': dict(sorted(self.counters.items())),
+                    'timers_s': {k: round(v, 3) for k, v in sorted(self.timers.items())}}
+
+
+# 'metrics': RunMetrics | None; 'batch': object with lookup()/query()/client/power or None.
+_RUN = {'metrics': None, 'batch': None}
+_DIAG = _threading.local()
+
+
+def set_run_context(metrics=None, batch=None) -> None:
+    _RUN['metrics'] = metrics
+    _RUN['batch'] = batch
+
+
+def _count(name: str, n: int = 1) -> None:
+    m = _RUN['metrics']
+    if m is not None:
+        m.add(name, n)
+
+
+def _timed_source(name):
+    """Decorator: record elapsed time of a source function into the active metrics."""
+    def wrap(fn):
+        import functools
+
+        @functools.wraps(fn)
+        def inner(*a, **k):
+            m = _RUN['metrics']
+            if m is None:
+                return fn(*a, **k)
+            with m.timed(name):
+                return fn(*a, **k)
+        return inner
+    return wrap
+
+
+def _diag_put(key, value) -> None:
+    """Record benchmark diagnostics for the current thread's cell, when enabled."""
+    store = getattr(_DIAG, 'store', None)
+    if store is not None:
+        store[key] = value
+
+
+def asset_identity(href: str) -> str:
+    """Stable asset identity: the URL without its (expiring) signature query string."""
+    return href.split('?', 1)[0]
+
+
+def grid_key(grid: Grid) -> tuple:
+    return (grid.crs.to_wkt(), tuple(grid.transform)[:6], tuple(grid.shape))
+
+
+def warp_read(src, grid: Grid, band: int = 1, resampling=Resampling.bilinear) -> np.ndarray:
+    """The exact per-child WarpedVRT read used by read_reprojected, on an open dataset."""
+    from rasterio.vrt import WarpedVRT
+    with WarpedVRT(src, crs=grid.crs.to_wkt(), transform=grid.transform,
+                   width=grid.shape[1], height=grid.shape[0],
+                   resampling=resampling, nodata=np.nan) as vrt:
+        data = vrt.read(band, masked=True).astype('float64')
+    return np.asarray(data.filled(np.nan), dtype=np.float64)
+
+
 def read_reprojected(href: str, grid: Grid, band: int = 1, resampling=Resampling.bilinear) -> np.ndarray:
     """Windowed VRT read, no full raster download; returns NaN for invalid pixels."""
+    batch = _RUN['batch']
+    if batch is not None:
+        cached = batch.lookup(href, grid, band, resampling)
+        if cached is not None:
+            _count('raster_cache_hits')
+            return cached
     import rasterio
-    from rasterio.vrt import WarpedVRT
     from rasterio.env import Env
     # HTTP ranges for remote GeoTIFF/COG access, where supported by provider.
-    with Env(GDAL_DISABLE_READDIR_ON_OPEN='EMPTY_DIR', CPL_VSIL_CURL_ALLOWED_EXTENSIONS='.tif,.TIF,.tiff'):
-        with rasterio.open(href) as src:
-            with WarpedVRT(src, crs=grid.crs.to_wkt(), transform=grid.transform,
-                           width=grid.shape[1], height=grid.shape[0],
-                           resampling=resampling, nodata=np.nan) as vrt:
-                data = vrt.read(band, masked=True).astype('float64')
-    return np.asarray(data.filled(np.nan), dtype=np.float64)
+    _count('raster_opens')
+    try:
+        with Env(**_GDAL_ENV):
+            with rasterio.open(href) as src:
+                return warp_read(src, grid, band, resampling)
+    except Exception:
+        _count('raster_failed_reads')
+        raise
 
 
 def _mean_neighbor_tri(arr: np.ndarray, valid: np.ndarray) -> float | None:
@@ -153,15 +257,29 @@ def optical_features(red: np.ndarray, nir: np.ndarray, valid_mask: np.ndarray | 
 STAC_URL='https://planetarycomputer.microsoft.com/api/stac/v1'
 
 def catalog():
+    batch = _RUN['batch']
+    if batch is not None and getattr(batch, 'client', None) is not None:
+        _count('stac_catalog_reuse')
+        return batch.client
     import planetary_computer
     from pystac_client import Client
+    _count('stac_catalog_opens')
     return Client.open(STAC_URL, modifier=planetary_computer.sign_inplace)
 
-def query_items(client, collection, grid, date_range=None, limit=12):
+def query_items_live(client, collection, grid, date_range=None, limit=12):
+    """The original per-cell STAC search (bbox intersects, server order, max_items cap)."""
     args=dict(collections=[collection],bbox=list(grid.bounds_wgs84),max_items=limit)
     if date_range: args['datetime']=date_range
+    _count('stac_searches')
     return list(client.search(**args).items())
 
+def query_items(client, collection, grid, date_range=None, limit=12):
+    batch = _RUN['batch']
+    if batch is not None:
+        return batch.query(client, collection, grid, date_range, limit, query_items_live)
+    return query_items_live(client, collection, grid, date_range, limit)
+
+@_timed_source('dem')
 def dem_from_stac(client, grid):
     """Mosaic DEM tiles where necessary, recording scene IDs and invalid coverage."""
     from rasterio.enums import Resampling
@@ -190,23 +308,27 @@ def dem_from_stac(client, grid):
 def _safe_cloud(item):
     return float(item.properties.get('eo:cloud_cover',100) or 100)
 
+# Asset key and resampling for each optical read; shared by the reader and batch prefetch.
+OPTICAL_ASSETS = {
+    'sentinel-2-l2a': (('B04', Resampling.bilinear), ('B08', Resampling.bilinear), ('SCL', Resampling.nearest)),
+    'landsat-c2-l2': (('red', Resampling.bilinear), ('nir08', Resampling.bilinear), ('qa_pixel', Resampling.nearest)),
+}
+
 def _read_optical_ndvi(collection: str, item, grid: Grid) -> np.ndarray | None:
+    specs = OPTICAL_ASSETS['sentinel-2-l2a' if collection == 'sentinel-2-l2a' else 'landsat-c2-l2']
+    if any(k not in item.assets for k, _ in specs):
+        return None
+    (k_red, r_red), (k_nir, r_nir), (k_qa, r_qa) = specs
     if collection == 'sentinel-2-l2a':
-        required = ('B04', 'B08', 'SCL')
-        if any(k not in item.assets for k in required):
-            return None
-        red = read_reprojected(item.assets['B04'].href, grid, resampling=Resampling.bilinear)
-        nir = read_reprojected(item.assets['B08'].href, grid, resampling=Resampling.bilinear)
-        scl = read_reprojected(item.assets['SCL'].href, grid, resampling=Resampling.nearest)
+        red = read_reprojected(item.assets[k_red].href, grid, resampling=r_red)
+        nir = read_reprojected(item.assets[k_nir].href, grid, resampling=r_nir)
+        scl = read_reprojected(item.assets[k_qa].href, grid, resampling=r_qa)
         # Cloud shadow, cloud medium/high, cirrus, snow, no data, saturation; retain vegetation and bare.
         mask = np.isin(scl, [4, 5, 6, 7]) & (red >= 0) & (nir >= 0) & ((red + nir) > 0)
     else:
-        required = ('red', 'nir08', 'qa_pixel')
-        if any(k not in item.assets for k in required):
-            return None
-        red = read_reprojected(item.assets['red'].href, grid) * 0.0000275 - 0.2
-        nir = read_reprojected(item.assets['nir08'].href, grid) * 0.0000275 - 0.2
-        qa = read_reprojected(item.assets['qa_pixel'].href, grid, resampling=Resampling.nearest)
+        red = read_reprojected(item.assets[k_red].href, grid, resampling=r_red) * 0.0000275 - 0.2
+        nir = read_reprojected(item.assets[k_nir].href, grid, resampling=r_nir) * 0.0000275 - 0.2
+        qa = read_reprojected(item.assets[k_qa].href, grid, resampling=r_qa)
         qi = np.nan_to_num(qa, nan=65535).astype(np.uint16)
         # bits 0 fill, 1 dilated cloud, 2 cirrus, 3 cloud, 4 shadow, 5 snow
         mask = ((qi & 0b111111) == 0) & (red >= 0) & (nir >= 0) & ((red + nir) > 0)
@@ -215,32 +337,39 @@ def _read_optical_ndvi(collection: str, item, grid: Grid) -> np.ndarray | None:
     return ndvi
 
 
-def optical_from_stac(client, grid, lat, year_start=2022, year_end=2025, max_items=16):
-    """Choose a good-quality summer scene, falling back to a multi-year per-pixel composite."""
+def optical_query_summer(client, grid, lat, y0, y1, limit, attempts):
+    """Hemisphere-specific summer candidates: S2 then Landsat, 80 returned, month filter, cloud sort, cap."""
     season = {12, 1, 2} if lat < 0 else {6, 7, 8}
+    start, end = (f'{y0}-12-01', f'{y1}-02-28') if lat < 0 else (f'{y0}-06-01', f'{y1}-08-31')
+    found = []
+    for collection in ('sentinel-2-l2a', 'landsat-c2-l2'):
+        try:
+            items = query_items(client, collection, grid, f'{start}/{end}', limit=80)
+            items = [i for i in items if i.datetime and i.datetime.month in season]
+            items = sorted(items, key=_safe_cloud)[:limit]
+            found.extend((collection, i) for i in items)
+        except Exception as exc:
+            attempts.append(f'{collection}: STAC query {exc}')
+    return found
+
+
+OPTICAL_SINGLE_LIMIT, OPTICAL_COMPOSITE_LIMIT = 16, 30
+OPTICAL_SINGLE_MIN, OPTICAL_COMPOSITE_MIN = 0.60, 0.25
+
+
+@_timed_source('optical')
+def optical_from_stac(client, grid, lat, year_start=2022, year_end=2025, max_items=OPTICAL_SINGLE_LIMIT):
+    """Choose a good-quality summer scene, falling back to a multi-year per-pixel composite."""
     attempts = []
 
-    def query_summer(y0, y1, limit):
-        start, end = (f'{y0}-12-01', f'{y1}-02-28') if lat < 0 else (f'{y0}-06-01', f'{y1}-08-31')
-        found = []
-        for collection in ('sentinel-2-l2a', 'landsat-c2-l2'):
-            try:
-                items = query_items(client, collection, grid, f'{start}/{end}', limit=80)
-                items = [i for i in items if i.datetime and i.datetime.month in season]
-                items = sorted(items, key=_safe_cloud)[:limit]
-                found.extend((collection, i) for i in items)
-            except Exception as exc:
-                attempts.append(f'{collection}: STAC query {exc}')
-        return found
-
     # Pass 1: single good scene in requested window.
-    for collection, item in query_summer(year_start, year_end, max_items):
+    for collection, item in optical_query_summer(client, grid, lat, year_start, year_end, max_items, attempts):
         try:
             ndvi = _read_optical_ndvi(collection, item, grid)
             if ndvi is None:
                 continue
             f = _ndvi_summary(ndvi)
-            if f['optical_valid_fraction'] >= 0.60:
+            if f['optical_valid_fraction'] >= OPTICAL_SINGLE_MIN:
                 f['ndvi_method'] = 'single_valid_summer_scene'
                 return f, dict(collection=collection, item_ids=[item.id],
                                acquisition_date=item.datetime.date().isoformat(),
@@ -253,7 +382,7 @@ def optical_from_stac(client, grid, lat, year_start=2022, year_end=2025, max_ite
     # Pass 2: widen to 2016..year_end and build per-pixel valid-pixel median composite.
     wide_start = min(year_start, 2016)
     stack, used_ids, collections_used = [], [], set()
-    for collection, item in query_summer(wide_start, year_end, 30):
+    for collection, item in optical_query_summer(client, grid, lat, wide_start, year_end, OPTICAL_COMPOSITE_LIMIT, attempts):
         try:
             ndvi = _read_optical_ndvi(collection, item, grid)
             if ndvi is not None and np.isfinite(ndvi).any():
@@ -266,7 +395,7 @@ def optical_from_stac(client, grid, lat, year_start=2022, year_end=2025, max_ite
         with np.errstate(invalid='ignore'):
             composite = np.nanmedian(np.stack(stack), axis=0)
         f = _ndvi_summary(composite)
-        if f['optical_valid_fraction'] >= 0.25:
+        if f['optical_valid_fraction'] >= OPTICAL_COMPOSITE_MIN:
             f['ndvi_method'] = 'multi_scene_summer_composite'
             return f, dict(collections=sorted(collections_used), item_ids=used_ids,
                            period=f'{wide_start}-{year_end}',
@@ -371,7 +500,14 @@ def phase1_features(tables):
     return f.loc[f.role.eq('global_search') & f.recommended_for_phase2.astype(str).str.lower().eq('yes'), 'feature_id'].tolist()
 
 
+@_timed_source('power')
 def power_features(lat, lon, first, last):
+    batch = _RUN['batch']
+    memo = getattr(batch, 'power', None) if batch is not None else None
+    if memo is not None and (lat, lon, first, last) in memo:
+        _count('power_prefetch_hits')
+        return memo[(lat, lon, first, last)]
+    _count('power_requests')
     r = requests.get('https://power.larc.nasa.gov/api/temporal/daily/point', params={
         'latitude': lat, 'longitude': lon, 'start': f'{first}0101', 'end': f'{last}1231',
         'parameters': 'T2M,PRECTOTCORR,RH2M', 'community': 'AG', 'format': 'JSON',
@@ -421,22 +557,27 @@ def _item_datetime(item):
     return datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
 
 
-def modis_features_pc(lat, lon, first, last, client=None):
-    """Fetch MODIS LST (MOD11A1 v061) and Snow (MOD10A1 v061) via Planetary Computer STAC."""
-    if client is None:
-        client = catalog()
-    grid = patch_grid(lat, lon, 1000, 500)
+MODIS_LST_DAY = ('LST_Day_1km', 'QC_Day')
+MODIS_LST_NIGHT = ('LST_Night_1km', 'QC_Night')
+MODIS_SNOW = ('NDSI_Snow_Cover', 'NDSI_Snow_Cover_Basic_QA')
+
+
+def _evenly_sample(items, n=45):
+    if len(items) <= n:
+        return items
+    step = len(items) / n
+    return [items[int(i * step)] for i in range(n)]
+
+
+def modis_grid(lat, lon):
+    return patch_grid(lat, lon, 1000, 500)
+
+
+def modis_sample_items(client, grid, lat, first, last):
+    """Ordered MODIS samples per cell: 45 summer / 45 winter LST items, 60 snow items."""
     begin, end = f'{first}-01-01T00:00:00Z', f'{last}-12-31T23:59:59Z'
     summer_months = {12, 1, 2} if lat < 0 else {6, 7, 8}
     winter_months = {6, 7, 8} if lat < 0 else {12, 1, 2}
-
-    def _evenly_sample(items, n=45):
-        if len(items) <= n:
-            return items
-        step = len(items) / n
-        return [items[int(i * step)] for i in range(n)]
-
-    # --- MOD11A1: LST summer max & winter min ---
     lst_items = query_items(client, 'modis-11A1-061', grid, f'{begin}/{end}', limit=3000)
     lst_dated = []
     for i in lst_items:
@@ -447,67 +588,82 @@ def modis_features_pc(lat, lon, first, last, client=None):
     lst_dated.sort(key=lambda x: x[0])
     summer_items = _evenly_sample([i for dt, i in lst_dated if dt.month in summer_months], 45)
     winter_items = _evenly_sample([i for dt, i in lst_dated if dt.month in winter_months], 45)
-
-    from concurrent.futures import ThreadPoolExecutor
-
-    def _read_lst_item(item, lst_asset, qc_asset):
-        if lst_asset not in item.assets:
-            return None
-        try:
-            arr = read_reprojected(item.assets[lst_asset].href, grid, resampling=Resampling.nearest)
-            valid = np.isfinite(arr) & (arr > 0)
-            if qc_asset in item.assets:
-                qc = read_reprojected(item.assets[qc_asset].href, grid, resampling=Resampling.nearest)
-                qc_int = np.nan_to_num(qc, nan=255).astype(np.uint16)
-                valid &= ((qc_int & 3) <= 1)
-            if valid.any():
-                temp_c = arr[valid] * 0.02 - 273.15
-                return float(np.mean(temp_c))
-        except Exception:
-            return None
-        return None
-
-    def _lst_vals(items, lst_asset, qc_asset):
-        with ThreadPoolExecutor(max_workers=12) as pool:
-            res = list(pool.map(lambda it: _read_lst_item(it, lst_asset, qc_asset), items))
-        return [v for v in res if v is not None]
-
-    s_vals = _lst_vals(summer_items, 'LST_Day_1km', 'QC_Day')
-    w_vals = _lst_vals(winter_items, 'LST_Night_1km', 'QC_Night')
-    if not w_vals:
-        w_vals = _lst_vals(winter_items, 'LST_Day_1km', 'QC_Day')
-    smax = max(s_vals) if s_vals else None
-    wmin = min(w_vals) if w_vals else None
-
-    # --- MOD10A1: Snow persistence ---
-    snow_items = query_items(client, 'modis-10A1-061', grid, f'{begin}/{end}', limit=3000)
+    snow_all = query_items(client, 'modis-10A1-061', grid, f'{begin}/{end}', limit=3000)
     snow_dated = []
-    for i in snow_items:
+    for i in snow_all:
         if i.id.startswith('MOD10A1'):
             dt = _item_datetime(i)
             if dt is not None:
                 snow_dated.append((dt, i))
     snow_dated.sort(key=lambda x: x[0])
     snow_items = _evenly_sample([i for _, i in snow_dated], 60)
+    return summer_items, winter_items, snow_items
 
-    def _read_snow_item(item):
-        if 'NDSI_Snow_Cover' not in item.assets:
-            return None
-        try:
-            band = read_reprojected(item.assets['NDSI_Snow_Cover'].href, grid, resampling=Resampling.nearest)
-            valid = np.isfinite(band) & (band >= 0) & (band <= 100)
-            if 'NDSI_Snow_Cover_Basic_QA' in item.assets:
-                qa = read_reprojected(item.assets['NDSI_Snow_Cover_Basic_QA'].href, grid, resampling=Resampling.nearest)
-                valid &= np.isfinite(qa) & (qa <= 2)
-            if valid.any():
-                return float((band[valid] >= 40).mean())
-        except Exception:
-            return None
+
+def modis_lst_value(item, lst_asset, qc_asset, grid):
+    if lst_asset not in item.assets:
         return None
+    try:
+        arr = read_reprojected(item.assets[lst_asset].href, grid, resampling=Resampling.nearest)
+        valid = np.isfinite(arr) & (arr > 0)
+        if qc_asset in item.assets:
+            qc = read_reprojected(item.assets[qc_asset].href, grid, resampling=Resampling.nearest)
+            qc_int = np.nan_to_num(qc, nan=255).astype(np.uint16)
+            valid &= ((qc_int & 3) <= 1)
+        if valid.any():
+            temp_c = arr[valid] * 0.02 - 273.15
+            return float(np.mean(temp_c))
+    except Exception:
+        return None
+    return None
 
+
+def modis_lst_values(items, lst_asset, qc_asset, grid):
+    from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=12) as pool:
-        snow_fracs = [v for v in pool.map(_read_snow_item, snow_items) if v is not None]
+        res = list(pool.map(lambda it: modis_lst_value(it, lst_asset, qc_asset, grid), items))
+    return [v for v in res if v is not None]
+
+
+def modis_snow_value(item, grid):
+    if MODIS_SNOW[0] not in item.assets:
+        return None
+    try:
+        band = read_reprojected(item.assets[MODIS_SNOW[0]].href, grid, resampling=Resampling.nearest)
+        valid = np.isfinite(band) & (band >= 0) & (band <= 100)
+        if MODIS_SNOW[1] in item.assets:
+            qa = read_reprojected(item.assets[MODIS_SNOW[1]].href, grid, resampling=Resampling.nearest)
+            valid &= np.isfinite(qa) & (qa <= 2)
+        if valid.any():
+            return float((band[valid] >= 40).mean())
+    except Exception:
+        return None
+    return None
+
+
+@_timed_source('modis')
+def modis_features_pc(lat, lon, first, last, client=None):
+    """Fetch MODIS LST (MOD11A1 v061) and Snow (MOD10A1 v061) via Planetary Computer STAC."""
+    if client is None:
+        client = catalog()
+    grid = modis_grid(lat, lon)
+    summer_items, winter_items, snow_items = modis_sample_items(client, grid, lat, first, last)
+
+    s_vals = modis_lst_values(summer_items, *MODIS_LST_DAY, grid)
+    w_vals = modis_lst_values(winter_items, *MODIS_LST_NIGHT, grid)
+    winter_fallback = not w_vals
+    if winter_fallback:
+        w_vals = modis_lst_values(winter_items, *MODIS_LST_DAY, grid)
+    smax = max(s_vals) if s_vals else None
+    wmin = min(w_vals) if w_vals else None
+
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        snow_fracs = [v for v in pool.map(lambda it: modis_snow_value(it, grid), snow_items) if v is not None]
     snow_persistence = float(np.mean(snow_fracs)) if snow_fracs else None
+    _diag_put('modis', {'summer_ids': [i.id for i in summer_items], 'winter_ids': [i.id for i in winter_items],
+                        'snow_ids': [i.id for i in snow_items], 'winter_day_fallback': winter_fallback,
+                        'summer_valid': len(s_vals), 'winter_valid': len(w_vals), 'snow_valid': len(snow_fracs)})
 
     return {
         'lst_summer_max_c': smax,
@@ -570,6 +726,7 @@ def _local_geology_file(directory):
     return None
 
 
+@_timed_source('glim')
 def glim_feature(lat, lon, directory):
     import geopandas as gpd
     from shapely.geometry import Point
@@ -602,6 +759,7 @@ def glim_feature(lat, lon, directory):
     return {'glim_lithology': majority.index[0]}, {'dataset_id': 'glim', 'file': str(file), 'support_m': 50000, 'class_column': field}
 
 
+@_timed_source('impact')
 def impact_feature(lat, lon, directory):
     from pyproj import Geod
     candidates = list(directory.rglob('*impact*.csv')) + list(directory.rglob('*crater*.csv'))

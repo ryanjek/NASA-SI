@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SURVIVORS = ROOT / "data/prefilter_vm/union/survivors_union.csv"
 OUT = ROOT / "data/prefilter_vm/union/survivors_mvp_stratified.csv"
 SEEDS = ("university_valley", "beacon_central_polygon", "drill_hill")
-N_PER_SEED = 20
+N_PER_SEED = 5
 
 
 def _contains_seed(series: pd.Series, seed: str) -> pd.Series:
