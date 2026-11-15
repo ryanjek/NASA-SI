@@ -168,6 +168,7 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="SITE_ID",
         help="a located Phase 1 seed (repeatable); default: all of them",
     )
+    prefilter.add_argument("--benchmark-seeds", action="store_true", help="also seed from every site in config/benchmarks.csv (ids bm_*)")
     prefilter.add_argument("--months", help="comma-separated calendar months to use, for example 1,7")
     prefilter.set_defaults(handler=_prefilter_command)
 

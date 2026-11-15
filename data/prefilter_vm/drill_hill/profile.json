@@ -1,0 +1,42 @@
+{
+  "seed": {
+    "site_id": "drill_hill",
+    "name": "Drill Hill",
+    "family": "haughton",
+    "lon": -89.76,
+    "lat": 75.420833,
+    "buffer_km": 0.0,
+    "coordinate_status": "published_point"
+  },
+  "interpretation": "A patch survives unless some gate fails. A gate fails only when the patch's [min, max] for that feature cannot overlap [lo, hi]. Missing data is unknown and passes.",
+  "gates": [
+    {
+      "feature": "lst_summer_max_c",
+      "layer": "modis_lst_day",
+      "lo": -7.630000114440918,
+      "hi": 22.369999885559082,
+      "seed_lo": 7.369999885559082,
+      "seed_hi": 7.369999885559082,
+      "tolerance": 15.0,
+      "unit": "degC",
+      "note": "Proxy: maximum over the supplied months of monthly-mean daytime LST (MOD11C3, 0.05 deg). The Phase 1 feature is the maximum clear-sky daily LST in local summer at 1 km. Tolerance 15 degC = 5 degC (within-feature fine tolerance) + 9.5 to 9.7 degC (p95 of |gap_seed - gap_candidate|, where gap = 1 km daily extreme minus coarse monthly value), rounded up. Measured on six non-seed tiles (Sahara, Tibet, Atacama, Siberia, Greenland, East Antarctica; Jan+Jul 2025; docs/prefilter.md). Fixed before search; review with Ryan."
+    },
+    {
+      "feature": "lst_winter_min_c",
+      "layer": "modis_lst_night",
+      "lo": -53.40999984741211,
+      "hi": -23.40999984741211,
+      "seed_lo": -38.40999984741211,
+      "seed_hi": -38.40999984741211,
+      "tolerance": 15.0,
+      "unit": "degC",
+      "note": "Proxy: minimum over the supplied months of monthly-mean night LST (MOD11C3, 0.05 deg). The Phase 1 feature is the minimum clear-sky LST in local winter at 1 km. Polar night leaves gaps, which count as unknown and never prune. Tolerance 15 degC = 5 degC (within-feature fine tolerance) + 9.5 to 9.7 degC (p95 of |gap_seed - gap_candidate|, where gap = 1 km daily extreme minus coarse monthly value), rounded up. Measured on six non-seed tiles (Sahara, Tibet, Atacama, Siberia, Greenland, East Antarctica; Jan+Jul 2025; docs/prefilter.md). Fixed before search; review with Ryan."
+    }
+  ],
+  "not_gates": [
+    {
+      "feature": "air_temp_days_above_0c",
+      "reason": "deferred: Needs daily air temperature (NASA POWER or MERRA-2); monthly LST is not a substitute for a day count."
+    }
+  ]
+}
