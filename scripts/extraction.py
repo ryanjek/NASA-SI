@@ -491,9 +491,13 @@ def main(args):
         site_id=site['site_id']
         lat,lon=site.get('latitude'),site.get('longitude')
         if pd.isna(lat) or pd.isna(lon):
-            statuses.append({'site_id':site_id,'status':'needs_geolocation'});continue
-        if site.get('coordinate_status')=='published_conflict' and not args.include_conflicts:
-            statuses.append({'site_id':site_id,'status':'needs_coordinate_review'});continue
+            print(f"Skipping {site_id}: no coordinates available")
+            statuses.append({
+                "site_id": site_id,
+                "status": "missing_coordinates"
+            })
+            continue
+
         lat,lon=float(lat),float(lon)
         print('Extracting',site_id, flush=True)
         row={f:None for f in features}
