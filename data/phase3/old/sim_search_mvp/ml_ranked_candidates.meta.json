@@ -1,0 +1,32 @@
+{
+  "model": "IsolationForest",
+  "anomaly_score_meaning": "lower = more in-distribution vs known analogs",
+  "cosine_similarity_meaning": "higher = more similar to matched seed (z-scored features)",
+  "training_site_ids": [
+    "beacon_central_polygon",
+    "drill_hill",
+    "university_valley"
+  ],
+  "n_train": 3,
+  "n_candidates": 4,
+  "features": [
+    "elev_m",
+    "slope_median_deg",
+    "slope_p95_deg",
+    "relief_1km_m",
+    "tri_100m",
+    "ndvi_summer_median",
+    "bare_fraction",
+    "snow_persistence",
+    "lst_summer_max_c",
+    "lst_winter_min_c",
+    "air_temp_days_above_0c",
+    "precip_mm_yr",
+    "humidity_mean_pct",
+    "impact_distance_km"
+  ],
+  "imputation": "median (fit on training analogs only)",
+  "scaling": "StandardScaler z-score (fit on training analogs only)",
+  "random_state": 42,
+  "n_estimators": 200
+}

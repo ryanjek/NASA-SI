@@ -4,6 +4,8 @@
 Run from repository root; imports scripts/extraction.py without modifying it.
 Uses 1,000 m centred windows (the same footprint as Phase 2), not exact
 ~0.80 km HEALPix child polygons. CSVs are checkpointed after each candidate.
+Per-cell report files are off by default; use --write-reports only for debugging.
+Use --workers 2–4 to overlap Planetary Computer / POWER network waits across cells.
 """
 from __future__ import annotations
 
@@ -11,6 +13,8 @@ import argparse
 import json
 import math
 import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import healpy as hp
@@ -93,8 +97,12 @@ def extract_candidate(task: dict, args) -> dict:
     if 'base' in sources:
         def base():
             # Exactly the same 1,000 m window and time interval as the reference runner.
-            result = extract_base(lat, lon, site_id, args.out / 'reports' / site_id,
-                                  patch_size_m=1000, year_start=args.start, year_end=args.end)
+            report_dir = (args.out / 'reports' / site_id) if args.write_reports else None
+            result = extract_base(
+                lat, lon, site_id, report_dir,
+                patch_size_m=1000, year_start=args.start, year_end=args.end,
+                write_reports=args.write_reports,
+            )
             errors.update(result.get('errors', {}))
             # Match the Phase 2 reference extractor's base feature set.
             keys = ('elev_m', 'slope_median_deg', 'slope_p95_deg', 'relief_1km_m',
@@ -116,6 +124,53 @@ def extract_candidate(task: dict, args) -> dict:
     row['provenance'] = json.dumps(provenance, default=str)
     row['features_computed'] = sum(pd.notna(row.get(f)) for f in CONTINUOUS + CATEGORICAL)
     return row
+
+
+def run_extractions(tasks: list[dict], done: dict[int, dict], args, checkpoint: Path) -> dict[int, dict]:
+    """Extract remaining cells, optionally in parallel. Checkpoint after each success."""
+    pending = [t for t in tasks if int(t['fine_cell_id']) not in done]
+    total = len(tasks)
+    already = total - len(pending)
+    if already:
+        print(f'Skipping {already} checkpointed cells; {len(pending)} remaining', flush=True)
+    if not pending:
+        return done
+
+    lock = threading.Lock()
+    workers = max(1, int(args.workers))
+
+    def _one(task: dict) -> tuple[int, dict]:
+        cell_id = int(task['fine_cell_id'])
+        print(f'extracting fine cell {cell_id}', flush=True)
+        return cell_id, extract_candidate(task, args)
+
+    def _store(cell_id: int, row: dict, finished: int) -> None:
+        with lock:
+            done[cell_id] = row
+            pd.DataFrame(list(done.values())).to_parquet(checkpoint, index=False)
+            print(f'[{already + finished}/{total}] saved {cell_id} (workers={workers})', flush=True)
+
+    if workers == 1:
+        for i, task in enumerate(pending, 1):
+            cell_id, row = _one(task)
+            _store(cell_id, row, i)
+        return done
+
+    # I/O-bound Planetary Computer / POWER calls: threads overlap network waits.
+    # Nested MODIS pools still use up to 12 threads each; keep workers modest (2–4).
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_one, task): int(task['fine_cell_id']) for task in pending}
+        finished = 0
+        for fut in as_completed(futures):
+            cell_id = futures[fut]
+            try:
+                cell_id, row = fut.result()
+            except Exception as exc:
+                print(f'ERROR fine cell {cell_id}: {exc}', flush=True)
+                continue
+            finished += 1
+            _store(cell_id, row, finished)
+    return done
 
 
 def rank_candidates(candidates: pd.DataFrame, references: pd.DataFrame, min_common: int) -> pd.DataFrame:
@@ -204,9 +259,19 @@ def main():
     ap.add_argument('--children-per-parent', type=int, default=10, help='0 means all')
     ap.add_argument('--max-cells', type=int, default=10, help='0 means all')
     ap.add_argument('--min-common', type=int, default=3)
+    ap.add_argument(
+        '--write-reports', action='store_true', default=False,
+        help='Write per-cell GeoJSON/JSON/Parquet under out/reports/ (off by default for bulk runs)',
+    )
+    ap.add_argument(
+        '--workers', type=int, default=4,
+        help='Parallel cell extractions',
+    )
     args = ap.parse_args()
     if args.start > args.end:
         ap.error('--start must not exceed --end')
+    if args.workers < 1:
+        ap.error('--workers must be >= 1')
     requested = set(args.sources.split(','))
     invalid = requested - {'base', 'power', 'modis', 'glim', 'impact', 'emit'}
     if invalid:
@@ -223,19 +288,11 @@ def main():
         done = {int(x): r for x, r in zip(done_df.fine_cell_id, done_df.to_dict('records'))}
     else:
         done = {}
-    for i, task in enumerate(tasks.to_dict('records'), 1):
-        cell_id = int(task['fine_cell_id'])
-        if cell_id in done:
-            print(f'[{i}/{len(tasks)}] skipping saved {cell_id}')
-            continue
-        print(f'[{i}/{len(tasks)}] extracting fine cell {cell_id}', flush=True)
-        done[cell_id] = extract_candidate(task, args)
-        pd.DataFrame(list(done.values())).to_parquet(checkpoint, index=False)
+    done = run_extractions(tasks.to_dict('records'), done, args, checkpoint)
     candidates = pd.DataFrame(list(done.values()))
     ranked = rank_candidates(candidates, refs, args.min_common)
     ranked.to_csv(args.out / 'ranked_candidates.csv', index=False)
     print(f'Extracted {len(candidates)} candidates; ranked {len(ranked)} candidate/reference pairs')
-    print(f'Outputs: {args.out}')
 
 
 if __name__ == '__main__':

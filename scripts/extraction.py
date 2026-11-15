@@ -283,8 +283,7 @@ FEATURES=('elev_m','slope_median_deg','slope_p95_deg','relief_1km_m','tri_neighb
           'optical_valid_fraction')
 
 def extract_base(lat,lon,site_id,output_dir,patch_size_m=1000,resolution_m=30,
-            optical=True, year_start=2022,year_end=2025):
-    out=Path(output_dir);out.mkdir(parents=True,exist_ok=True)
+            optical=True, year_start=2022,year_end=2025, write_reports=True):
     grid=patch_grid(lat,lon,patch_size_m,resolution_m)
     row=dict(site_id=site_id,latitude=lat,longitude=lon,patch_size_m=patch_size_m,
              crs=grid.crs.to_string(),grid_resolution_m=grid.resolution_m,
@@ -315,18 +314,21 @@ def extract_base(lat,lon,site_id,output_dir,patch_size_m=1000,resolution_m=30,
     props=dict(row)
     props['provenance']=provenance
     props['errors']=errors
-    # Polygon saved in projected coordinates reprojected to WGS84; avoids a fake degree-square.
-    from pyproj import Transformer
-    from rasterio.transform import xy
-    to_ll=Transformer.from_crs(grid.crs,4326,always_xy=True)
-    t=grid.transform; h,w=grid.shape
-    corners_xy=[t*(0,0),t*(w,0),t*(w,h),t*(0,h)]
-    ring=[list(to_ll.transform(x,y)) for x,y in corners_xy]
-    ring.append(ring[0])
-    feature={'type':'Feature','geometry':{'type':'Polygon','coordinates':[ring]},'properties':props}
-    (out/f'{site_id}.geojson').write_text(json.dumps({'type':'FeatureCollection','features':[feature]},indent=2,default=str))
-    (out/f'{site_id}_report.json').write_text(json.dumps(props,indent=2,default=str))
-    pd.DataFrame([{k:v for k,v in row.items()}]).to_parquet(out/f'{site_id}_features.parquet',index=False)
+    if write_reports:
+        if output_dir is None:
+            raise ValueError('output_dir is required when write_reports=True')
+        out=Path(output_dir);out.mkdir(parents=True,exist_ok=True)
+        # Polygon saved in projected coordinates reprojected to WGS84; avoids a fake degree-square.
+        from pyproj import Transformer
+        to_ll=Transformer.from_crs(grid.crs,4326,always_xy=True)
+        t=grid.transform; h,w=grid.shape
+        corners_xy=[t*(0,0),t*(w,0),t*(w,h),t*(0,h)]
+        ring=[list(to_ll.transform(x,y)) for x,y in corners_xy]
+        ring.append(ring[0])
+        feature={'type':'Feature','geometry':{'type':'Polygon','coordinates':[ring]},'properties':props}
+        (out/f'{site_id}.geojson').write_text(json.dumps({'type':'FeatureCollection','features':[feature]},indent=2,default=str))
+        (out/f'{site_id}_report.json').write_text(json.dumps(props,indent=2,default=str))
+        pd.DataFrame([{k:v for k,v in row.items()}]).to_parquet(out/f'{site_id}_features.parquet',index=False)
     return props
 
 # --- Phase 1 dataset adapters and batch orchestration ---
