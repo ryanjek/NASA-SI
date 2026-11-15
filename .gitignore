@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Downloaded rasters and generated extraction outputs
+/data/raw/
+/data/processed/
+/data/phase2/
