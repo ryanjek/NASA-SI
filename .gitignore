@@ -222,8 +222,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-data/
-.taste-skill/
-.venv/
-node_modules/
-web/dist/
+# Downloaded rasters and generated extraction outputs
+/data/raw/
+/data/processed/
+/data/phase2/
+
