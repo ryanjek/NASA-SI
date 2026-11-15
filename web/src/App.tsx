@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DEFAULT_WEIGHTS, type Weights } from './lib/scoring';
+import { DEFAULT_WEIGHTS, defaultBounds, type Bounds, type Weights } from './lib/scoring';
 import { rankAnalogs } from './lib/ranking';
 import { siteById } from './data/marsSites';
 import { analogById, type ContinentId } from './data/analogs';
@@ -13,6 +13,7 @@ export default function App() {
   const [stage, setStage] = useState<'mars' | 'earth'>('mars');
   const [siteId, setSiteId] = useState<string | null>(null);
   const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
+  const [bounds, setBounds] = useState<Bounds | undefined>(undefined);
   const [continent, setContinent] = useState<ContinentId | null>(null);
   const [analogId, setAnalogId] = useState<string | null>(null);
   const [ran, setRan] = useState(false);
@@ -23,7 +24,7 @@ export default function App() {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const site = siteId ? siteById(siteId) : undefined;
-  const ranked = useMemo(() => (site ? rankAnalogs(site.id, weights) : []), [site, weights]);
+  const ranked = useMemo(() => (site ? rankAnalogs(site.id, weights, bounds) : []), [site, weights, bounds]);
 
   const step: Step = stage === 'earth' ? 3 : site ? 2 : 1;
   const reached: Step = ran ? 3 : site ? 2 : 1;
@@ -76,9 +77,12 @@ export default function App() {
           <MarsView
             site={site}
             weights={weights}
+            bounds={bounds}
             busy={searching}
             onSelect={(id) => {
               setSiteId(id);
+              const next = siteById(id);
+              setBounds(next ? defaultBounds(next.raw) : undefined);
               setRan(false);
             }}
             onClose={() => setSiteId(null)}
@@ -86,8 +90,13 @@ export default function App() {
               setWeights(w);
               setRan(false);
             }}
+            onBounds={(b) => {
+              setBounds(b);
+              setRan(false);
+            }}
             onReset={() => {
               setWeights(DEFAULT_WEIGHTS);
+              setBounds(site ? defaultBounds(site.raw) : undefined);
               setRan(false);
             }}
             onRun={run}

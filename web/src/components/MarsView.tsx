@@ -1,5 +1,5 @@
 import { MARS_SITES, type MarsSite } from '../data/marsSites';
-import { marsCategoryScores, weightedScore, type Weights } from '../lib/scoring';
+import { marsCategoryScores, weightedScore, type Bounds, type Weights } from '../lib/scoring';
 import { plural } from '../lib/format';
 import { MarsMap, MiniMars } from './MarsMap';
 import { SitePopup } from './SitePopup';
@@ -8,15 +8,17 @@ import { SectionTitle } from './ui';
 interface Props {
   site: MarsSite | undefined;
   weights: Weights;
+  bounds: Bounds | undefined;
   busy: boolean;
   onSelect: (id: string) => void;
   onClose: () => void;
   onWeights: (w: Weights) => void;
+  onBounds: (b: Bounds) => void;
   onReset: () => void;
   onRun: () => void;
 }
 
-export function MarsView({ site, weights, busy, onSelect, onClose, onWeights, onReset, onRun }: Props) {
+export function MarsView({ site, weights, bounds, busy, onSelect, onClose, onWeights, onBounds, onReset, onRun }: Props) {
   const scoreOf = (s: MarsSite) => weightedScore(marsCategoryScores(s.raw), weights);
   const n = MARS_SITES.length;
   return (
@@ -47,7 +49,7 @@ export function MarsView({ site, weights, busy, onSelect, onClose, onWeights, on
           <p className="faint">Screening only — not landing certification.</p>
         </section>
       </div>
-      {site && <SitePopup site={site} weights={weights} busy={busy} onChange={onWeights} onReset={onReset} onClose={onClose} onRun={onRun} />}
+      {site && bounds && <SitePopup site={site} weights={weights} bounds={bounds} busy={busy} onChange={onWeights} onBounds={onBounds} onReset={onReset} onClose={onClose} onRun={onRun} />}
     </div>
   );
 }

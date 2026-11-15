@@ -1,15 +1,18 @@
 import { useEffect } from 'react';
-import { CATEGORIES, marsCategoryScores, weightedScore, type Weights } from '../lib/scoring';
+import { CATEGORIES, marsCategoryScores, weightedScore, type Bounds, type Weights } from '../lib/scoring';
 import type { MarsSite } from '../data/marsSites';
 import { WeightSliders } from './WeightSliders';
+import { BoundsControls } from './BoundsControls';
 import { Icon } from './Icon';
 import { SectionTitle, scoreColor } from './ui';
 
 interface Props {
   site: MarsSite;
   weights: Weights;
+  bounds: Bounds;
   busy: boolean;
   onChange: (w: Weights) => void;
+  onBounds: (b: Bounds) => void;
   onReset: () => void;
   onClose: () => void;
   onRun: () => void;
@@ -33,7 +36,7 @@ function rawText(site: MarsSite, id: (typeof CATEGORIES)[number]['id']): string 
   }
 }
 
-export function SitePopup({ site, weights, busy, onChange, onReset, onClose, onRun }: Props) {
+export function SitePopup({ site, weights, bounds, busy, onChange, onBounds, onReset, onClose, onRun }: Props) {
   const scores = marsCategoryScores(site.raw);
   const total = Math.round(weightedScore(scores, weights));
 
@@ -96,6 +99,8 @@ export function SitePopup({ site, weights, busy, onChange, onReset, onClose, onR
 
         <hr />
         <WeightSliders weights={weights} onChange={onChange} />
+        <hr />
+        <BoundsControls site={site} bounds={bounds} onChange={onBounds} />
       </div>
       <footer className="popup-foot">
         <button type="button" className="btn btn-ghost" onClick={onReset}>

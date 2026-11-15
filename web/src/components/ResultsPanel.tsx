@@ -79,7 +79,7 @@ export function ResultsPanel({ ranked, weights, siteName, continent, selectedId,
           <h2>{top.length === 1 ? 'Top Earth analog' : `Top ${top.length} Earth analogs`}</h2>
           <p>Ranked for {siteName} · weighted by your priorities</p>
         </header>
-        {top.length === 0 && <p className="empty">No Earth analog sites were found for this site and these priorities.</p>}
+        {top.length === 0 && <p className="empty">No Earth analog sites fall inside your ranges. Widen the ranges on the site panel to be more lenient.</p>}
         {top.map((r, i) => (
           <AnalogCard key={r.id} item={r} rank={i + 1} onSelect={() => onPick(r.id)} />
         ))}
