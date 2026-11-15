@@ -1469,7 +1469,7 @@ wheels = [
 [[package]]
 name = "nasa-si"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "earthaccess" },
     { name = "earthengine-api" },
