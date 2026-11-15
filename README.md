@@ -9,7 +9,7 @@ uv run python scripts/validate_phase1.py
 uv run python scripts/extraction.py \
   --phase1 data/phase1 \
   --out data/phase2 \
-  --ee-project nasa-mars-analog-2026
+  --ee-project project-cbed46f4-9e94-460b-941
 ```
 
 The files in `data/processed/` are a separate Mars landing-site screen. They are not Earth analog results. Phase 1 does not train a model or run a similarity search.

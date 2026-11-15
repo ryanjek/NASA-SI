@@ -69,6 +69,24 @@ def read_reprojected(href: str, grid: Grid, band: int = 1, resampling=Resampling
     return np.asarray(data.filled(np.nan), dtype=np.float64)
 
 
+def _mean_neighbor_tri(arr: np.ndarray, valid: np.ndarray) -> float | None:
+    """Mean absolute elevation difference to 8 immediate neighbors across valid cells."""
+    offsets = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
+    differences = []
+    for y, x in offsets:
+        shifted = np.roll(np.roll(arr, y, axis=0), x, axis=1)
+        d = np.abs(arr - shifted)
+        mask = valid & np.roll(np.roll(valid, y, axis=0), x, axis=1)
+        if y > 0: mask[:y, :] = False
+        if y < 0: mask[y:, :] = False
+        if x > 0: mask[:, :x] = False
+        if x < 0: mask[:, x:] = False
+        differences.append(np.where(mask, d, np.nan))
+    with np.errstate(invalid='ignore'):
+        tri = np.nanmean(np.stack(differences), axis=0)
+    return float(np.nanmean(tri)) if np.isfinite(tri).any() else None
+
+
 def dem_features(dem: np.ndarray, pixel_m: float) -> dict:
     valid = np.isfinite(dem)
     coverage = float(valid.mean())
@@ -88,24 +106,37 @@ def dem_features(dem: np.ndarray, pixel_m: float) -> dict:
     result['slope_median_deg'] = float(np.median(slope[valid]))
     result['slope_p95_deg'] = float(np.percentile(slope[valid],95))
     result['relief_1km_m'] = float(np.percentile(dem[valid],98)-np.percentile(dem[valid],2))
-    # TRI: mean absolute elevation difference with immediate neighboring cells.
-    # This is computed at pixel_m grid spacing, not an exact 100m-neighborhood TRI.
-    offsets=[(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
-    differences=[]
-    for y,x in offsets:
-        shifted=np.roll(np.roll(arr,y,axis=0),x,axis=1)
-        d=np.abs(arr-shifted)
-        mask=valid & np.roll(np.roll(valid,y,axis=0),x,axis=1)
-        if y>0: mask[:y,:]=False
-        if y<0: mask[y:,:]=False
-        if x>0: mask[:,:x]=False
-        if x<0: mask[:,x:]=False
-        differences.append(np.where(mask,d,np.nan))
-    with np.errstate(invalid='ignore'):
-        tri=np.nanmean(np.stack(differences),axis=0)
-    result['tri_neighbor_m']=float(np.nanmean(tri)) if np.isfinite(tri).any() else None
-    result['tri_100m']=None  # require explicit standardized 100m implementation
+    result['tri_neighbor_m'] = _mean_neighbor_tri(arr, valid)
+
+    # Standardized 100 m TRI: resample DEM to a 100 m grid via area-averaging, then compute 8-neighbor TRI.
+    h, w = dem.shape
+    h100 = max(3, int(round(h * pixel_m / 100.0)))
+    w100 = max(3, int(round(w * pixel_m / 100.0)))
+    src_transform = from_origin(0.0, h * pixel_m, pixel_m, pixel_m)
+    dst_transform = from_origin(0.0, h * pixel_m, 100.0, 100.0)
+    dem_100 = np.full((h100, w100), np.nan, dtype=np.float64)
+    reproject(
+        source=dem.astype(np.float64),
+        destination=dem_100,
+        src_transform=src_transform,
+        src_crs='EPSG:3857',
+        dst_transform=dst_transform,
+        dst_crs='EPSG:3857',
+        src_nodata=np.nan,
+        dst_nodata=np.nan,
+        resampling=Resampling.average,
+    )
+    valid_100 = np.isfinite(dem_100)
+    result['tri_100m'] = _mean_neighbor_tri(dem_100, valid_100) if valid_100.sum() >= 9 else None
     return result
+
+
+def _ndvi_summary(ndvi: np.ndarray, bare_ndvi_threshold: float = 0.2) -> dict:
+    valid = np.isfinite(ndvi)
+    return dict(ndvi_summer_median=float(np.nanmedian(ndvi[valid])) if valid.any() else None,
+                bare_fraction=float((ndvi[valid] < bare_ndvi_threshold).mean()) if valid.any() else None,
+                optical_valid_fraction=float(valid.mean()),
+                bare_ndvi_threshold=bare_ndvi_threshold)
 
 
 def optical_features(red: np.ndarray, nir: np.ndarray, valid_mask: np.ndarray | None = None,
@@ -114,10 +145,7 @@ def optical_features(red: np.ndarray, nir: np.ndarray, valid_mask: np.ndarray | 
     if valid_mask is not None: valid &= valid_mask.astype(bool)
     ndvi=np.full(red.shape,np.nan,dtype=float)
     ndvi[valid]=(nir[valid]-red[valid])/(nir[valid]+red[valid])
-    return dict(ndvi_summer_median=float(np.nanmedian(ndvi)) if valid.any() else None,
-                bare_fraction=float((ndvi[valid] < bare_ndvi_threshold).mean()) if valid.any() else None,
-                optical_valid_fraction=float(valid.mean()),
-                bare_ndvi_threshold=bare_ndvi_threshold)
+    return _ndvi_summary(ndvi, bare_ndvi_threshold=bare_ndvi_threshold)
 
 # --- STAC raster sources ---
 """Catalog search and cloud-window reads. Real I/O requires network access."""
@@ -162,59 +190,91 @@ def dem_from_stac(client, grid):
 def _safe_cloud(item):
     return float(item.properties.get('eo:cloud_cover',100) or 100)
 
-def optical_from_stac(client,grid,lat,year_start=2022,year_end=2025,max_items=16):
-    """Choose a good-quality summer scene, Sentinel-2 then Landsat fallback.
+def _read_optical_ndvi(collection: str, item, grid: Grid) -> np.ndarray | None:
+    if collection == 'sentinel-2-l2a':
+        required = ('B04', 'B08', 'SCL')
+        if any(k not in item.assets for k in required):
+            return None
+        red = read_reprojected(item.assets['B04'].href, grid, resampling=Resampling.bilinear)
+        nir = read_reprojected(item.assets['B08'].href, grid, resampling=Resampling.bilinear)
+        scl = read_reprojected(item.assets['SCL'].href, grid, resampling=Resampling.nearest)
+        # Cloud shadow, cloud medium/high, cirrus, snow, no data, saturation; retain vegetation and bare.
+        mask = np.isin(scl, [4, 5, 6, 7]) & (red >= 0) & (nir >= 0) & ((red + nir) > 0)
+    else:
+        required = ('red', 'nir08', 'qa_pixel')
+        if any(k not in item.assets for k in required):
+            return None
+        red = read_reprojected(item.assets['red'].href, grid) * 0.0000275 - 0.2
+        nir = read_reprojected(item.assets['nir08'].href, grid) * 0.0000275 - 0.2
+        qa = read_reprojected(item.assets['qa_pixel'].href, grid, resampling=Resampling.nearest)
+        qi = np.nan_to_num(qa, nan=65535).astype(np.uint16)
+        # bits 0 fill, 1 dilated cloud, 2 cirrus, 3 cloud, 4 shadow, 5 snow
+        mask = ((qi & 0b111111) == 0) & (red >= 0) & (nir >= 0) & ((red + nir) > 0)
+    ndvi = np.full(grid.shape, np.nan, dtype=float)
+    ndvi[mask] = (nir[mask] - red[mask]) / (nir[mask] + red[mask])
+    return ndvi
 
-    This is a single-scene pilot, NOT a multi-year summer median.
-    """
-    # Southern hemisphere summer spans Dec-Feb; northern summer Jun-Aug.
-    start,end=(f'{year_start}-12-01',f'{year_end}-02-28') if lat<0 else (f'{year_start}-06-01',f'{year_end}-08-31')
-    # Date range spans all months between the endpoints; explicitly discard non-summer months.
-    season={12,1,2} if lat<0 else {6,7,8}
-    attempts=[]
-    for collection in ('sentinel-2-l2a','landsat-c2-l2'):
-        try:
-            items=query_items(client,collection,grid,f'{start}/{end}',limit=80)
-            items=[i for i in items if i.datetime and i.datetime.month in season]
-            items=sorted(items,key=_safe_cloud)[:max_items]
-        except Exception as exc:
-            attempts.append(f'{collection}: STAC query {exc}')
-            continue
-        for item in items:
+
+def optical_from_stac(client, grid, lat, year_start=2022, year_end=2025, max_items=16):
+    """Choose a good-quality summer scene, falling back to a multi-year per-pixel composite."""
+    season = {12, 1, 2} if lat < 0 else {6, 7, 8}
+    attempts = []
+
+    def query_summer(y0, y1, limit):
+        start, end = (f'{y0}-12-01', f'{y1}-02-28') if lat < 0 else (f'{y0}-06-01', f'{y1}-08-31')
+        found = []
+        for collection in ('sentinel-2-l2a', 'landsat-c2-l2'):
             try:
-                if collection=='sentinel-2-l2a':
-                    required=('B04','B08','SCL')
-                    if any(k not in item.assets for k in required):continue
-                    red=read_reprojected(item.assets['B04'].href,grid, resampling=Resampling.bilinear)
-                    nir=read_reprojected(item.assets['B08'].href,grid, resampling=Resampling.bilinear)
-                    scl=read_reprojected(item.assets['SCL'].href,grid,resampling=Resampling.nearest)
-                    # Cloud shadow, cloud medium/high, cirrus, snow, no data, saturation; retain vegetation and bare.
-                    mask=np.isin(scl,[4,5,6,7]) & (red>=0) & (nir>=0)
-                    # Sentinel-2 reflectance DN / 10000, same factor in both bands,
-                    # but offsets can exist in some processing baselines. Verify for strict reflectance use.
-                else:
-                    required=('red','nir08','qa_pixel')
-                    if any(k not in item.assets for k in required):continue
-                    red=read_reprojected(item.assets['red'].href,grid)
-                    nir=read_reprojected(item.assets['nir08'].href,grid)
-                    qa=read_reprojected(item.assets['qa_pixel'].href,grid,resampling=Resampling.nearest)
-                    # Landsat Collection 2 L2 SR scale/offset: 0.0000275, -0.2
-                    red=red*0.0000275-0.2
-                    nir=nir*0.0000275-0.2
-                    qi=np.nan_to_num(qa,nan=65535).astype(np.uint16)
-                    # bits 0 fill, 1 dilated cloud, 2 cirrus, 3 cloud, 4 shadow, 5 snow
-                    mask=((qi & 0b111111)==0) & (red>=0) & (nir>=0)
-                f=optical_features(red,nir,mask)
-                if f['optical_valid_fraction']>=0.60:
-                    f['ndvi_method']='single_valid_summer_scene'
-                    return f,dict(collection=collection,item_ids=[item.id],
-                                  acquisition_date=item.datetime.date().isoformat(),
-                                  scene_cloud_pct=_safe_cloud(item),
-                                  attempted_errors=attempts)
-                attempts.append(f'{item.id}: valid coverage {f["optical_valid_fraction"]:.2f}')
+                items = query_items(client, collection, grid, f'{start}/{end}', limit=80)
+                items = [i for i in items if i.datetime and i.datetime.month in season]
+                items = sorted(items, key=_safe_cloud)[:limit]
+                found.extend((collection, i) for i in items)
             except Exception as exc:
-                attempts.append(f'{item.id}: {exc}')
-    raise RuntimeError('No usable optical scene; '+'; '.join(attempts[-8:]))
+                attempts.append(f'{collection}: STAC query {exc}')
+        return found
+
+    # Pass 1: single good scene in requested window.
+    for collection, item in query_summer(year_start, year_end, max_items):
+        try:
+            ndvi = _read_optical_ndvi(collection, item, grid)
+            if ndvi is None:
+                continue
+            f = _ndvi_summary(ndvi)
+            if f['optical_valid_fraction'] >= 0.60:
+                f['ndvi_method'] = 'single_valid_summer_scene'
+                return f, dict(collection=collection, item_ids=[item.id],
+                               acquisition_date=item.datetime.date().isoformat(),
+                               scene_cloud_pct=_safe_cloud(item),
+                               attempted_errors=attempts)
+            attempts.append(f'{item.id}: valid coverage {f["optical_valid_fraction"]:.2f}')
+        except Exception as exc:
+            attempts.append(f'{item.id}: {exc}')
+
+    # Pass 2: widen to 2016..year_end and build per-pixel valid-pixel median composite.
+    wide_start = min(year_start, 2016)
+    stack, used_ids, collections_used = [], [], set()
+    for collection, item in query_summer(wide_start, year_end, 30):
+        try:
+            ndvi = _read_optical_ndvi(collection, item, grid)
+            if ndvi is not None and np.isfinite(ndvi).any():
+                stack.append(ndvi)
+                used_ids.append(item.id)
+                collections_used.add(collection)
+        except Exception as exc:
+            attempts.append(f'{item.id}: {exc}')
+    if stack:
+        with np.errstate(invalid='ignore'):
+            composite = np.nanmedian(np.stack(stack), axis=0)
+        f = _ndvi_summary(composite)
+        if f['optical_valid_fraction'] >= 0.25:
+            f['ndvi_method'] = 'multi_scene_summer_composite'
+            return f, dict(collections=sorted(collections_used), item_ids=used_ids,
+                           period=f'{wide_start}-{year_end}',
+                           scene_count=len(used_ids),
+                           attempted_errors=attempts[-8:])
+        attempts.append(f'composite valid coverage {f["optical_valid_fraction"]:.2f}')
+
+    raise RuntimeError('No usable optical scene; ' + '; '.join(attempts[-8:]))
 
 # --- Original per-coordinate extractor (legacy optical pilot) ---
 # Provenance and feature gaps recorded explicitly; no invented values.
@@ -352,6 +412,119 @@ def make_ee_patch(lat, lon):
     return ee.Geometry.Polygon([ring])
 
 
+def _item_datetime(item):
+    if item.datetime is not None:
+        return item.datetime
+    dt_str = item.properties.get('datetime') or item.properties.get('start_datetime')
+    if not dt_str:
+        return None
+    return datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
+
+
+def modis_features_pc(lat, lon, first, last, client=None):
+    """Fetch MODIS LST (MOD11A1 v061) and Snow (MOD10A1 v061) via Planetary Computer STAC."""
+    if client is None:
+        client = catalog()
+    grid = patch_grid(lat, lon, 1000, 500)
+    begin, end = f'{first}-01-01T00:00:00Z', f'{last}-12-31T23:59:59Z'
+    summer_months = {12, 1, 2} if lat < 0 else {6, 7, 8}
+    winter_months = {6, 7, 8} if lat < 0 else {12, 1, 2}
+
+    def _evenly_sample(items, n=45):
+        if len(items) <= n:
+            return items
+        step = len(items) / n
+        return [items[int(i * step)] for i in range(n)]
+
+    # --- MOD11A1: LST summer max & winter min ---
+    lst_items = query_items(client, 'modis-11A1-061', grid, f'{begin}/{end}', limit=3000)
+    lst_dated = []
+    for i in lst_items:
+        if i.id.startswith('MOD11A1'):
+            dt = _item_datetime(i)
+            if dt is not None:
+                lst_dated.append((dt, i))
+    lst_dated.sort(key=lambda x: x[0])
+    summer_items = _evenly_sample([i for dt, i in lst_dated if dt.month in summer_months], 45)
+    winter_items = _evenly_sample([i for dt, i in lst_dated if dt.month in winter_months], 45)
+
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _read_lst_item(item, lst_asset, qc_asset):
+        if lst_asset not in item.assets:
+            return None
+        try:
+            arr = read_reprojected(item.assets[lst_asset].href, grid, resampling=Resampling.nearest)
+            valid = np.isfinite(arr) & (arr > 0)
+            if qc_asset in item.assets:
+                qc = read_reprojected(item.assets[qc_asset].href, grid, resampling=Resampling.nearest)
+                qc_int = np.nan_to_num(qc, nan=255).astype(np.uint16)
+                valid &= ((qc_int & 3) <= 1)
+            if valid.any():
+                temp_c = arr[valid] * 0.02 - 273.15
+                return float(np.mean(temp_c))
+        except Exception:
+            return None
+        return None
+
+    def _lst_vals(items, lst_asset, qc_asset):
+        with ThreadPoolExecutor(max_workers=12) as pool:
+            res = list(pool.map(lambda it: _read_lst_item(it, lst_asset, qc_asset), items))
+        return [v for v in res if v is not None]
+
+    s_vals = _lst_vals(summer_items, 'LST_Day_1km', 'QC_Day')
+    w_vals = _lst_vals(winter_items, 'LST_Night_1km', 'QC_Night')
+    if not w_vals:
+        w_vals = _lst_vals(winter_items, 'LST_Day_1km', 'QC_Day')
+    smax = max(s_vals) if s_vals else None
+    wmin = min(w_vals) if w_vals else None
+
+    # --- MOD10A1: Snow persistence ---
+    snow_items = query_items(client, 'modis-10A1-061', grid, f'{begin}/{end}', limit=3000)
+    snow_dated = []
+    for i in snow_items:
+        if i.id.startswith('MOD10A1'):
+            dt = _item_datetime(i)
+            if dt is not None:
+                snow_dated.append((dt, i))
+    snow_dated.sort(key=lambda x: x[0])
+    snow_items = _evenly_sample([i for _, i in snow_dated], 60)
+
+    def _read_snow_item(item):
+        if 'NDSI_Snow_Cover' not in item.assets:
+            return None
+        try:
+            band = read_reprojected(item.assets['NDSI_Snow_Cover'].href, grid, resampling=Resampling.nearest)
+            valid = np.isfinite(band) & (band >= 0) & (band <= 100)
+            if 'NDSI_Snow_Cover_Basic_QA' in item.assets:
+                qa = read_reprojected(item.assets['NDSI_Snow_Cover_Basic_QA'].href, grid, resampling=Resampling.nearest)
+                valid &= np.isfinite(qa) & (qa <= 2)
+            if valid.any():
+                return float((band[valid] >= 40).mean())
+        except Exception:
+            return None
+        return None
+
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        snow_fracs = [v for v in pool.map(_read_snow_item, snow_items) if v is not None]
+    snow_persistence = float(np.mean(snow_fracs)) if snow_fracs else None
+
+    return {
+        'lst_summer_max_c': smax,
+        'lst_winter_min_c': wmin,
+        'snow_persistence': snow_persistence,
+    }, {
+        'provider': 'planetary_computer',
+        'modis_lst': 'modis-11A1-061',
+        'modis_snow': 'modis-10A1-061',
+        'summer_valid_days': len(s_vals),
+        'winter_valid_days': len(w_vals),
+        'snow_valid_days': len(snow_fracs),
+        'snow_threshold_ndsi': 40,
+        'temporal_period': f'{first}-{last}',
+    }
+
+
 def modis_features(lat, lon, first, last):
     import ee
     patch = make_ee_patch(lat, lon)
@@ -390,7 +563,7 @@ def modis_features(lat, lon, first, last):
 
 
 def _local_geology_file(directory):
-    for pattern in ('glim*.gpkg', 'glim*.geojson', 'glim*.shp', 'GLiM*.shp', 'GLiM*.gpkg'):
+    for pattern in ('glim*.gpkg', 'glim*.geojson', 'glim*.shp', 'GLiM*.shp', 'GLiM*.gpkg', '*GLiM*.gdb', '*LiMW*.gdb', '*.gdb'):
         matches = list(directory.rglob(pattern))
         if matches:
             return matches[0]
@@ -402,27 +575,28 @@ def glim_feature(lat, lon, directory):
     from shapely.geometry import Point
     file = _local_geology_file(directory)
     if file is None:
-        raise FileNotFoundError('GLiM map not downloaded. Add its .shp/.gpkg to data/phase1/source_data/glim/')
-    geology = gpd.read_file(file)
-    if geology.crs is None:
-        raise ValueError(f'GLiM file has no CRS: {file}')
+        raise FileNotFoundError('GLiM map not downloaded. Add its .shp/.gpkg/.gdb to data/phase1/source_data/glim/')
     # Phase 1 specifies 50 km spatial support for GLiM, not exact patch lithology.
     center = gpd.GeoSeries([Point(lon, lat)], crs='EPSG:4326')
     zone = max(1, min(60, int((lon + 180) // 6) + 1))
-    epsg = 32600+zone if lat >= 0 else 32700+zone
+    epsg = 32600 + zone if lat >= 0 else 32700 + zone
     area = center.to_crs(epsg).buffer(25000)
-    region = gpd.GeoDataFrame(geometry=area, crs=f'EPSG:{epsg}').to_crs(geology.crs)
+    region_wgs84 = gpd.GeoDataFrame(geometry=area, crs=f'EPSG:{epsg}').to_crs('EPSG:4326')
+    read_kwargs = {'layer': 'GLiM_export'} if file.suffix.lower() == '.gdb' else {}
     try:
-        idx = list(geology.sindex.query(region.geometry.iloc[0], predicate='intersects'))
-        subset = geology.iloc[idx]
+        subset = gpd.read_file(file, mask=region_wgs84, **read_kwargs)
     except Exception:
+        geology = gpd.read_file(file, **read_kwargs)
+        if geology.crs is None:
+            raise ValueError(f'GLiM file has no CRS: {file}')
+        region = region_wgs84.to_crs(geology.crs)
         subset = geology[geology.intersects(region.geometry.iloc[0])]
     if subset.empty:
         return {'glim_lithology': None}, {'dataset_id': 'glim', 'file': str(file), 'status': 'no_coverage'}
     subset = subset.to_crs(epsg)
     field = next((c for c in ('xx', 'XX', 'lithology', 'LITHOLOGY', 'litho', 'class') if c in subset.columns), None)
     if field is None:
-        raise ValueError('GLiM lithology column not identified. Columns: '+str(list(subset.columns)))
+        raise ValueError('GLiM lithology column not identified. Columns: ' + str(list(subset.columns)))
     part = subset.geometry.intersection(area.iloc[0]).area
     majority = part.groupby(subset[field].astype(str)).sum().sort_values(ascending=False)
     return {'glim_lithology': majority.index[0]}, {'dataset_id': 'glim', 'file': str(file), 'support_m': 50000, 'class_column': field}
@@ -480,12 +654,17 @@ def main(args):
         sites = sites[sites.site_id.isin(args.only.split(','))]
     if not args.all_points:
         sites = sites[sites.site_role.eq('science_subregion') & sites.transferable_to_similarity_search.astype(str).str.lower().eq('true')]
-    try:
-        import ee
-        ee.Initialize(project=args.ee_project)
-        ee_error = None
-    except Exception as exc:
-        ee_error = str(exc)
+    ee_error = 'unused (Planetary Computer MODIS selected)'
+    if args.modis_source == 'ee':
+        if not args.ee_project:
+            ee_error = '--ee-project is required when --modis-source=ee'
+        else:
+            try:
+                import ee
+                ee.Initialize(project=args.ee_project)
+                ee_error = None
+            except Exception as exc:
+                ee_error = str(exc)
     outputs=[]; statuses=[]
     for site in sites.to_dict('records'):
         site_id=site['site_id']
@@ -514,14 +693,16 @@ def main(args):
         def base():
             res=extract_base(lat,lon,site_id,out/site_id,year_start=args.start,year_end=args.end)
             errors.update(res.get('errors',{}))
-            vals={k:res.get(k) for k in ('elev_m','slope_median_deg','slope_p95_deg','relief_1km_m')}
-            # Existing optical code uses one scene, not the Phase 1 seasonal median.
+            vals={k:res.get(k) for k in ('elev_m','slope_median_deg','slope_p95_deg','relief_1km_m','tri_100m','ndvi_summer_median','bare_fraction')}
             provenance['optical_pilot']={'ndvi':res.get('ndvi_summer_median'), 'bare_fraction':res.get('bare_fraction'),
-                                         'status':'single_scene_not_phase1_seasonal_aggregation'}
+                                         'ndvi_method':res.get('ndvi_method'),
+                                         'optical_valid_fraction':res.get('optical_valid_fraction')}
             return vals, res.get('provenance',{})
         attempt('dem_optical_pilot',base)
         attempt('nasa_power',lambda:power_features(lat,lon,args.start,args.end))
-        if ee_error is None:
+        if args.modis_source == 'pc':
+            attempt('modis',lambda:modis_features_pc(lat,lon,args.start,args.end))
+        elif ee_error is None:
             attempt('modis',lambda:modis_features(lat,lon,args.start,args.end))
         else:
             errors['earth_engine']=ee_error
@@ -552,7 +733,8 @@ if __name__ == "__main__":
 
     parser.add_argument("--phase1", default="data/phase1")
     parser.add_argument("--out", default="data/phase2")
-    parser.add_argument("--ee-project", required=True)
+    parser.add_argument("--modis-source", choices=["pc", "ee"], default="pc")
+    parser.add_argument("--ee-project", default=None)
     parser.add_argument("--start", type=int, default=2022)
     parser.add_argument("--end", type=int, default=2024)
     parser.add_argument("--only", help="Comma-separated site IDs")

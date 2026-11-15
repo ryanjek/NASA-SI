@@ -1,0 +1,383 @@
+{
+  "created_utc": "2026-11-15T09:32:04+00:00",
+  "git_sha": "f8338c30f0782eba27bb2ac3595f113c9222eb5e",
+  "grid": {
+    "coarse_nside": 128,
+    "fine_nside": 8192,
+    "ordering": "NESTED",
+    "patch_area_km2": 2594.3,
+    "children_per_patch": 4096
+  },
+  "inputs": [
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025001.061.2025035172114.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 1,
+      "sha256": "de47a59c6d7e707bdbd2b717349f9cb3f833177233830fd09214dbcc495b4f2a"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025032.061.2025063170308.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 2,
+      "sha256": "6fc74964ed711fe82e9a46e78c56dea102eed48c96254552808f6190b7155a46"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025060.061.2025093043031.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 3,
+      "sha256": "80521ad05e0747633db440fad69e112568529e6c14d09e0ef4d84260ed3782bf"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025091.061.2025125142315.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 4,
+      "sha256": "785d16804bf47b75cbf366928dd047fd6ab1e5bed16dc948d4f1534e11717e31"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025121.061.2025153164905.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 5,
+      "sha256": "ee64cce6c87e6217524536d665d6153b4978e822cc61d37096280326aa9fd4a6"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025152.061.2025182145012.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 6,
+      "sha256": "2de88ee37219ff17323f35ba6dc5c0d91ec7e8b1dbccd79bc6252cd547ceb5cc"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025182.061.2025213154157.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 7,
+      "sha256": "4dfb7758dda3776e303565d67acaf4885ba77242bcaa43b516fbad96667b7e83"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025213.061.2025246014643.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 8,
+      "sha256": "4ed20fff080247cd6039d5cc2e094cea04852d2badfb724eb1c9159e1639dfd7"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025244.061.2025275150152.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 9,
+      "sha256": "39af72fc2df2483c6d7a52e4d87319f1ef0cb602438ac351a9dfbda5c3102d34"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025274.061.2025306143832.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 10,
+      "sha256": "d29b11f918697b219f1c41546c0dba0eaefb12c8b66504370b67f218ebdd08be"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025305.061.2025335114103.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 11,
+      "sha256": "1f20f8890b5b6c3ff0c19d8efdcee9e65b239db7d68ffa288f23201edd3873fb"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/temperature-terra/MOD11C3.A2025335.061.2026006185449.hdf",
+      "layer": "modis_lst",
+      "year": 2025,
+      "month": 12,
+      "sha256": "0f23a9ddc83b52fc2f24f77a8dbbe3e074ece129f22e239f03ef4cb9ef9b02a7"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025001.061.2025035171541.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 1,
+      "sha256": "6f0cd70653119f8a1443a5bc9e0daa27ac699fe43adc947f1222bfcef8a5e254"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025032.061.2025072100143.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 2,
+      "sha256": "4d636df410c7cad87b584b2230a982a739f17c3eedbfbd72237b584380df97f7"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025060.061.2025098184723.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 3,
+      "sha256": "7ac10579258a09e30802c24682393dd8638524a473c2a2f8fc2d9ef493986519"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025091.061.2025133163506.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 4,
+      "sha256": "af13a65a7c78ff12987592974326948269249de4facea67f022b2134c528f2ef"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025121.061.2025163044304.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 5,
+      "sha256": "6c27cd02065b96c27115562a39c3ecefa6d444c674779bc84c175b25e039c972"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025152.061.2025219165905.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 6,
+      "sha256": "455f818e66a1481f7a0f2a17cf271afce298805e34751954b4e4cf2e961895f8"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025182.061.2025227032314.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 7,
+      "sha256": "317c70125a78cce66ee2bba093ffd1335897648c7676df4eea65d9afc8e809c4"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025213.061.2025259093641.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 8,
+      "sha256": "a1457ec890902f0c780c9a640f5873e4fab66549e699715e47f2ccbb49b3fb9a"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025244.061.2025290121318.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 9,
+      "sha256": "8d63b34565e4cf58c61dbb309df120a808325bbf48184d9b449def874956ecc5"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025274.061.2025306103720.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 10,
+      "sha256": "335d868133643889b1f85b43b37b458ef67318b0d7976becb9d09b50dcef31d2"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025305.061.2025339133307.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 11,
+      "sha256": "5cedf0ec8ec0b23b62fce3900454d84edadf3b1d1c11f36293e31bbaa9159186"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/vegetation/MOD13C2.A2025335.061.2026006151829.hdf",
+      "layer": "modis_ndvi",
+      "year": 2025,
+      "month": 12,
+      "sha256": "b724b326c82f9226d7315abc2112c879a07dd559b495ca620a636bd85d321abc"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025001.061.2025035215507.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 1,
+      "sha256": "088d18695117624e5c2987aa3c4ce06f3c48eb0d4c925c5ce998c8c5ff1832fd"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025032.061.2025063170126.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 2,
+      "sha256": "0539a5bbf82719b3a16b27fcd5dc13df645d747fc334fc062fbab528e77b1b92"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025060.061.2025092111717.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 3,
+      "sha256": "c012080de2ee337e4dc8dbf9bffdf0fc1980f1d9022620042c05f87f4568a41c"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025091.061.2025125142119.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 4,
+      "sha256": "7dfc5d26e24b8df3a7de0243f823aa240106c91c775530ce2ab6dea27b5d170a"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025121.061.2025153163102.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 5,
+      "sha256": "31aa3e3dc8d9146eebabc2c9ee66160631c262fc3a2f2c67108e6a1df90e99b7"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025152.061.2025183101705.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 6,
+      "sha256": "dd29e15dc8f2c59bba324bdd25f0009afd0792422ac95e45bf3d252ceeab890c"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025182.061.2025214043939.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 7,
+      "sha256": "113030aeafe7164d7bde3b0fb4bac90d035dd601793055a8394510e89ab4f129"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025213.061.2025246014134.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 8,
+      "sha256": "868b8a1d1fff698404fc989524c3c7c0f52a1a75ad9821bd1f40ba2adda92c8f"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025244.061.2025275150025.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 9,
+      "sha256": "acd81397092ce711910cb708503a6122a24532dfb1b0a2b6059f6d5c9274fcae"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025274.061.2025306143443.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 10,
+      "sha256": "84fea74e422c619270cc20eff1b0089e43d8afe57296429cf72a956f1f188915"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025305.061.2025336060933.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 11,
+      "sha256": "5010685014a2a39490a8bd10c161393739c88e527b4a88e42e57e12568598189"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/snow/MOD10CM.A2025335.061.2026006190334.hdf",
+      "layer": "modis_snow",
+      "year": 2025,
+      "month": 12,
+      "sha256": "225351e2ade600c5a069e51d3ec6db78d33c7db8bf803502cb4c527505f1a1a1"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202501.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 1,
+      "sha256": "64eb8fe0f0e052af73238ab71fdf56d53f563c63109827976d3c37b810083b3f"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202502.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 2,
+      "sha256": "23d508eb9bc379709318d17d4318b24201f6ae272e32a6e4a05de8a69a9060b9"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202503.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 3,
+      "sha256": "801e9edcf670da59cb05bd20071f28698097e4cdc9b95e05fd9bd402c6e6e104"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202504.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 4,
+      "sha256": "2d36f459e23386c24b311f4bb341cab160f9048805757033c1d85ad35f194e9f"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202505.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 5,
+      "sha256": "1d5a1c9e5964220b424b41871c9d4f6508cb8a1b17823acd4815e69fc8790f8d"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202506.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 6,
+      "sha256": "ec362af80d7e73b459a16c97191c7b2c8a9c182862743bcb6a99139ce130e999"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202507.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 7,
+      "sha256": "76faca64bcaadffc70c2b0567fec3fe83e029f3dac50feefe229eda3a78f515b"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202508.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 8,
+      "sha256": "6bb51ec3e5d291b9028e66ceb7ef3c90f2cac6bb1df0a9151d4460662719868d"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202509.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 9,
+      "sha256": "e27b22252fd7b8534ee26964c6ec6a151715476d0b4747cd36ec97d8cea0b309"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202510.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 10,
+      "sha256": "5dbeea1c03d321f30eddaa547854d18d0bdc9055e0ed4b9915d6e270ca2e6d0f"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202511.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 11,
+      "sha256": "f875fd664883e2681ee8b2a02b52df6c6a2921cea2c684a1640089aebab4afa5"
+    },
+    {
+      "path": "/home/jishnuappana/NASA-SI/data/earth/raw/precipitation/MERRA2_400.tavgM_2d_lnd_Nx.202512.nc4",
+      "layer": "merra2_precip",
+      "year": 2025,
+      "month": 12,
+      "sha256": "0bf179d9a0d6336f124bbb2f065b49a4f0791bcc00c573ccf4e667c9a205076c"
+    }
+  ],
+  "config_sha256": {
+    "prefilter_features.csv": "e5df3f76395aa375f7a7b9dad535494e1cc67d21711ae0ab09b76fb32a28caad",
+    "phase1_sites.csv": "c7e560fcab59f911de98cd2e2ce067c687395a85523758b5a129821680dcf96c",
+    "phase1_features.csv": "b2866d040bd3114a19eba44434c22c0ae374b1a99391054d8f3a51161ec4bb07",
+    "phase1_processes.csv": "7d8e06515ab5a8b8c86f47c73cdf35d656bed793aa6c8f025ef3db058c1202f6"
+  },
+  "notes": [
+    "modis_lst_day: 12 month(s) combined by max (calendar months [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])",
+    "modis_lst_night: 12 month(s) combined by min (calendar months [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])",
+    "modis_ndvi: 12 month(s) combined by max (calendar months [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])",
+    "modis_snow: 12 month(s) combined by mean (calendar months [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])",
+    "merra2_precip: 12 month(s) combined by sum (calendar months [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])",
+    "lst_summer_max_c: MOD11C3 (stand-in for Drive modis_lst = MOD11A1)",
+    "lst_winter_min_c: MOD11C3 (stand-in for Drive modis_lst = MOD11A1)",
+    "ndvi_summer_median: MOD13C2 (stand-in for Drive sentinel2_l2a)",
+    "snow_persistence: MOD10CM (stand-in for Drive modis_snow = MOD10A1)",
+    "precip_mm_yr: MERRA-2 PRECTOTLAND (stand-in for Drive nasa_power)"
+  ],
+  "summary": {
+    "seed": "beacon_central_polygon",
+    "gates": [
+      "snow_persistence",
+      "lst_summer_max_c",
+      "lst_winter_min_c"
+    ],
+    "population_patches": 65189,
+    "surviving_patches": 4619,
+    "removed_fraction": 0.9291,
+    "seed_patch": 147822,
+    "seed_patch_in_population": true,
+    "seed_patch_survives": true,
+    "buffer_patches": 1,
+    "buffer_patches_surviving": 1
+  }
+}
