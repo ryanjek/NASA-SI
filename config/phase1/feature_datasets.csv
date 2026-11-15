@@ -47,3 +47,6 @@ lava_morphology_class,usgs_hawaii_geology,primary
 hydrothermal_mineral_setting,haughton_geologic_map,primary
 lst_summer_max_c,modis_mod11c3,alternate
 lst_winter_min_c,modis_mod11c3,alternate
+ndvi_summer_median,modis_mod13c2,alternate
+snow_persistence,modis_mod10cm,alternate
+precip_mm_yr,merra2_land,alternate

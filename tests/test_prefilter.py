@@ -174,11 +174,11 @@ def test_seeds_are_the_located_transferable_phase1_sites():
         assert cands and "elev_m" not in [c for c in cands if False]
 
 
-def test_every_feature_uses_a_catalogued_dataset_and_lst_gates_name_their_stand_in():
+def test_every_feature_uses_a_catalogued_dataset_and_gates_name_their_stand_in():
     specs = load_feature_specs(FEATURES_CONFIG, phase1_dir=PHASE1_DIR)
     listed = {r["dataset_id"] for r in read_table(PHASE1_DIR / "datasets.csv")}
     assert {s.dataset_id for s in specs.values()} <= listed
-    assert {s.dataset_id for s in specs.values() if s.role == "gate"} == {"modis_mod11c3"}
+    assert {s.dataset_id for s in specs.values() if s.role == "gate"} == {"modis_mod11c3", "modis_mod13c2", "modis_mod10cm", "merra2_land"}
     for s in specs.values():
         if s.role == "gate":
             assert "stand-in" in s.source_product

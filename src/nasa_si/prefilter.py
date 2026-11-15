@@ -450,7 +450,7 @@ def run_prefilter(
         if sp.role == "gate" and sp.source_product:
             notes.append(f"{sp.feature_id}: {sp.source_product}")
     if not rasters:
-        raise FileNotFoundError(f"no MODIS MOD11C3 monthly land-surface-temperature files found under {raw_dir}")
+        raise FileNotFoundError(f"no input files found under {raw_dir} (looking for MODIS MOD11C3, MOD13C2, MOD10CM and MERRA-2 land monthly files)")
     stats = compute_feature_stats(rasters, specs, grid)
     population = population_mask(stats, grid.npix_coarse)
 

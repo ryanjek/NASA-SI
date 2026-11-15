@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from nasa_si.layers import GlobalRaster, combine_rasters
 from nasa_si.patches import PatchAccumulator, PatchGrid
@@ -54,3 +55,64 @@ def test_window_values_and_combine():
     assert mx.values.tolist() == [[5.0, 2.0]]
     mn = combine_rasters([make([[1, np.nan]]), make([[5, 2]])], "min", "m")
     assert mn.values.tolist() == [[1.0, 2.0]]
+
+
+def _flat(values, name="x"):
+    from nasa_si.layers import GlobalRaster
+
+    return GlobalRaster(name, np.array(values, dtype=np.float32), -180.0, 90.0, 180.0, 90.0)
+
+
+def test_combine_mean_and_sum_ignore_nan():
+    from nasa_si.layers import combine_rasters
+
+    a, b = _flat([[1.0, np.nan], [4.0, np.nan]]), _flat([[3.0, np.nan], [np.nan, 2.0]])
+    mean = combine_rasters([a, b], "mean", "m").values
+    total = combine_rasters([a, b], "sum", "s").values
+    assert mean[0, 0] == 2.0 and mean[1, 0] == 4.0 and mean[1, 1] == 2.0 and np.isnan(mean[0, 1])
+    assert total[0, 0] == 4.0 and total[1, 0] == 4.0 and np.isnan(total[0, 1])
+
+
+def test_upsample_keeps_values_and_shrinks_pixels():
+    from nasa_si.layers import upsample
+
+    r = _flat([[1.0, 2.0], [3.0, 4.0]])
+    u = upsample(r, 4)
+    assert u.values.shape == (8, 8) and u.dlon == r.dlon / 4 and u.dlat == r.dlat / 4
+    assert (u.values[:4, :4] == 1.0).all() and (u.values[4:, 4:] == 4.0).all()
+    assert (u.lon_west, u.lat_north) == (r.lon_west, r.lat_north)
+
+
+def test_snow_fraction_scales_percent_and_drops_flags():
+    from nasa_si.layers import snow_fraction
+
+    out = snow_fraction(np.array([0, 50, 100, 101, 200, 255], dtype=np.uint8))
+    assert out[:3].tolist() == [0.0, 0.5, 1.0] and np.isnan(out[3:]).all()
+
+
+def test_precip_converts_rate_to_mm_and_masks_fill():
+    from nasa_si.layers import precip_mm_month
+
+    rate = np.array([1e-5, 0.0, 1e15, np.nan])
+    mm = precip_mm_month(rate, 2025, 2)  # 28 days
+    assert mm[0] == pytest.approx(1e-5 * 86400 * 28, rel=1e-5)
+    assert mm[1] == 0.0 and np.isnan(mm[2]) and np.isnan(mm[3])
+
+
+def test_find_files_matches_terra_only_and_reads_merra_months(tmp_path):
+    from nasa_si.layers import find_modis_files, merra_month_of
+
+    for name in ["MOD11C3.A2025032.061.x.hdf", "MYD11C3.A2025032.061.x.hdf", "MOD10CM.A2025001.061.x.hdf", "MOD13C2.A2025060.061.x.hdf", "MERRA2_400.tavgM_2d_lnd_Nx.202503.nc4", "MERRA2_400.tavgM_2d_aer_Nx.202503.nc4"]:
+        (tmp_path / name).write_bytes(b"")
+    found = find_modis_files(tmp_path)
+    assert [p.name for p in found["MOD11C3"]] == ["MOD11C3.A2025032.061.x.hdf"]
+    assert len(found["MOD10CM"]) == len(found["MOD13C2"]) == len(found["MERRA2_lnd"]) == 1
+    assert merra_month_of(found["MERRA2_lnd"][0]) == (2025, 3)
+
+
+def test_pixels_centred_past_a_pole_are_accepted():
+    # MERRA-2 style grid: 361 rows from +90 to -90 means the top row's pixel is centred at the pole.
+    r = GlobalRaster("p", np.full((8, 4), 5.0, dtype=np.float32), -180.0, 90.25, 90.0, 0.5 / 1)
+    acc = PatchAccumulator(GRID.npix_coarse)
+    r.accumulate(acc, GRID)
+    assert acc.result().observed.any()

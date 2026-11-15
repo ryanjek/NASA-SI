@@ -12,6 +12,7 @@ catalog (NASA POWER climate, GLiM lithology, a global ~1 km DEM) are registered 
 
 from __future__ import annotations
 
+import calendar
 import datetime as dt
 import hashlib
 import math
@@ -89,7 +90,7 @@ class GlobalRaster:
         """
         lons = self.lons()
         half_lon, half_lat = self.dlon / 2 * 0.999, self.dlat / 2 * 0.999
-        lats = self.lats()
+        lats = np.clip(self.lats(), -90.0, 90.0)  # a half-pixel row can centre just past a pole
         for r0 in range(0, self.rows, row_block):
             r1 = min(r0 + row_block, self.rows)
             lat_c = lats[r0:r1, None] * np.ones((1, self.cols))
@@ -109,24 +110,40 @@ def _haversine_km(lon1: float, lat1: float, lon2: float, lat2: float) -> float:
 
 
 def combine_rasters(rasters: list[GlobalRaster], how: str, name: str) -> GlobalRaster:
-    """Element-wise max or min over same-shaped rasters, ignoring NaN (all-NaN stays NaN)."""
+    """Element-wise max, min, mean or sum over same-shaped rasters, ignoring NaN (all-NaN stays NaN)."""
     if not rasters:
         raise ValueError("no rasters to combine")
+    if how not in ("max", "min", "mean", "sum"):
+        raise ValueError("how must be 'max', 'min', 'mean' or 'sum'")
     first = rasters[0]
     for r in rasters[1:]:
         if r.values.shape != first.values.shape or (r.lon_west, r.lat_north, r.dlon, r.dlat) != (first.lon_west, first.lat_north, first.dlon, first.dlat):
             raise ValueError("rasters must share one grid to be combined")
     stack = np.stack([r.values for r in rasters]).astype(np.float64)
     all_nan = np.all(np.isnan(stack), axis=0)
-    filled = np.where(np.isnan(stack), -np.inf if how == "max" else np.inf, stack)
     if how == "max":
-        out = filled.max(axis=0)
+        out = np.where(np.isnan(stack), -np.inf, stack).max(axis=0)
     elif how == "min":
-        out = filled.min(axis=0)
+        out = np.where(np.isnan(stack), np.inf, stack).min(axis=0)
+    elif how == "mean":
+        out = np.nansum(stack, axis=0) / np.maximum(np.sum(~np.isnan(stack), axis=0), 1)
     else:
-        raise ValueError("how must be 'max' or 'min'")
+        out = np.nansum(stack, axis=0)
     out[all_nan] = np.nan
     return GlobalRaster(name, out.astype(np.float32), first.lon_west, first.lat_north, first.dlon, first.dlat, first.unit)
+
+
+def upsample(raster: GlobalRaster, factor: int) -> GlobalRaster:
+    """Repeat each pixel ``factor`` x ``factor`` times, so a pixel is much smaller than a 50 km patch.
+
+    The filter credits a pixel to a patch through nine points of its footprint; that is only safe when a
+    pixel is well under the patch size. A 0.5 degree model grid is about the patch size, so it is repeated
+    before use. No values change, only the pixel size.
+    """
+    if factor < 1:
+        raise ValueError("factor must be at least 1")
+    vals = np.repeat(np.repeat(raster.values, factor, axis=0), factor, axis=1)
+    return GlobalRaster(raster.name, vals, raster.lon_west, raster.lat_north, raster.dlon / factor, raster.dlat / factor, raster.unit)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -185,6 +202,55 @@ def read_modis_ndvi(path: Path) -> GlobalRaster:
     return GlobalRaster("ndvi", ndvi, west, north, dlon, dlat, "1")
 
 
+def snow_fraction(raw: np.ndarray) -> np.ndarray:
+    """MOD10CM Snow_Cover_Monthly_CMG is percent snow cover 0-100; anything above 100 is a fill or flag."""
+    pct = raw.astype(np.float64)
+    return np.where(pct <= 100, pct / 100.0, np.nan).astype(np.float32)
+
+
+def read_modis_snow(path: Path) -> GlobalRaster:
+    """MOD10CM monthly snow cover as a 0-1 fraction of the 0.05 degree pixel."""
+    raw, _ = _read_sds(Path(path), "Snow_Cover_Monthly_CMG")
+    frac = snow_fraction(raw)
+    west, north, dlon, dlat = _cmg_geometry(frac.shape)
+    return GlobalRaster("snow", frac, west, north, dlon, dlat, "fraction")
+
+
+_MERRA_FILE = re.compile(r"\.(\d{4})(\d{2})\.nc4?$")
+_MERRA_FILL = 1e14  # MERRA-2 land fields use 1e15 over ocean
+
+
+def merra_month_of(path: Path | str) -> tuple[int, int]:
+    match = _MERRA_FILE.search(Path(path).name)
+    if not match:
+        raise ValueError(f"cannot read the month from {path}")
+    return int(match.group(1)), int(match.group(2))
+
+
+def precip_mm_month(rate_kg_m2_s: np.ndarray, year: int, month: int) -> np.ndarray:
+    """Convert a monthly-mean precipitation rate (kg m-2 s-1, so 1 kg m-2 = 1 mm) to mm for that month."""
+    days = calendar.monthrange(year, month)[1]
+    rate = rate_kg_m2_s.astype(np.float64)
+    return np.where(np.isfinite(rate) & (np.abs(rate) < _MERRA_FILL), rate * 86400.0 * days, np.nan).astype(np.float32)
+
+
+def read_merra2_precip(path: Path, *, upsample_by: int = 4) -> GlobalRaster:
+    """MERRA-2 tavgM_2d_lnd_Nx PRECTOTLAND as mm for the month, on a finer grid (see ``upsample``)."""
+    import netCDF4  # lazy: only needed when MERRA-2 files are read
+
+    year, month = merra_month_of(path)
+    with netCDF4.Dataset(str(path)) as ds:
+        rate = np.ma.filled(ds.variables["PRECTOTLAND"][0].astype(np.float64), np.nan)
+        lat = np.asarray(ds.variables["lat"][:], dtype=np.float64)
+        lon = np.asarray(ds.variables["lon"][:], dtype=np.float64)
+    if lat[0] > lat[-1]:  # make row 0 the northernmost
+        rate, lat = rate[::-1], lat[::-1]
+    # Row 0 should be the northernmost row; MERRA-2 lists latitude south to north, so it was flipped above.
+    dlat, dlon = abs(lat[1] - lat[0]), abs(lon[1] - lon[0])
+    raster = GlobalRaster("merra2_precip", precip_mm_month(rate, year, month), float(lon[0] - dlon / 2), float(lat[0] + dlat / 2), float(dlon), float(dlat), "mm")
+    return upsample(raster, upsample_by)
+
+
 def sha256_of(path: Path | str, chunk: int = 1 << 20) -> str:
     digest = hashlib.sha256()
     with open(path, "rb") as handle:
@@ -203,12 +269,27 @@ class InputFile:
 
 
 def find_modis_files(raw_dir: Path | str) -> dict[str, list[Path]]:
-    """Locate MODIS monthly files below ``raw_dir`` by product, sorted by acquisition month."""
+    """Locate the monthly input files below ``raw_dir`` by product, sorted by month.
+
+    MODIS products (``MOD11C3``, ``MOD13C2``, ``MOD10CM``) are matched by their file prefix, so the Aqua
+    ``MYD*`` files are not picked up. ``MERRA2_lnd`` is the MERRA-2 monthly land file (precipitation).
+    """
     root = Path(raw_dir)
-    found: dict[str, list[Path]] = {"MOD11C3": [], "MOD13C2": []}
-    for product in found:
+    found: dict[str, list[Path]] = {}
+    for product in ("MOD11C3", "MOD13C2", "MOD10CM"):
         found[product] = sorted((p for p in root.rglob(f"{product}.A*.hdf")), key=month_of)
+    found["MERRA2_lnd"] = sorted((p for p in root.rglob("MERRA2_*tavgM_2d_lnd_Nx.*.nc4")), key=merra_month_of)
     return found
+
+
+# Layers a feature can ask for, and how the monthly rasters of each are reduced to one.
+LAYER_COMBINER = {
+    "modis_lst_day": "max",  # warmest month
+    "modis_lst_night": "min",  # coldest month
+    "modis_ndvi": "max",  # greenest month
+    "modis_snow": "mean",  # share of the year with snow cover
+    "merra2_precip": "sum",  # annual total, only when all 12 months are present
+}
 
 
 def load_stage1_rasters(
@@ -217,43 +298,63 @@ def load_stage1_rasters(
     """Build the per-layer rasters the stage-1 features are derived from.
 
     Returns ``(rasters_by_layer, inputs, notes)``. ``rasters_by_layer`` keys are the layer ids used in
-    ``config/prefilter_features.csv``: ``modis_lst_day``, ``modis_lst_night`` and ``modis_ndvi``; each is
-    the element-wise max or min over the months found (see ``layer_combiner``). ``months`` restricts
-    which calendar months are used; ``layers`` restricts which layers are read (default: all). ``notes`` records anything a reader should know about coverage.
+    ``config/prefilter_features.csv`` (see ``LAYER_COMBINER``); each is the element-wise reduction over the
+    months found. ``months`` restricts which calendar months are used; ``layers`` restricts which layers
+    are read (default: all). ``notes`` records anything a reader should know about coverage.
     """
     files = find_modis_files(raw_dir)
     inputs: list[InputFile] = []
     notes: list[str] = []
-    per_layer: dict[str, list[GlobalRaster]] = {"modis_lst_day": [], "modis_lst_night": [], "modis_ndvi": []}
+    per_layer: dict[str, list[GlobalRaster]] = {name: [] for name in LAYER_COMBINER}
 
-    want = lambda *names: layers is None or any(n in layers for n in names)  # noqa: E731
+    def want(*names: str) -> bool:
+        return layers is None or any(n in layers for n in names)
+
+    def keep(month: int) -> bool:
+        return not months or month in months
+
     for path in files["MOD11C3"] if want("modis_lst_day", "modis_lst_night") else []:
         year, month = month_of(path)
-        if months and month not in months:
-            continue
-        per_layer["modis_lst_day"].append(read_modis_lst(path, night=False))
-        per_layer["modis_lst_night"].append(read_modis_lst(path, night=True))
-        inputs.append(InputFile(str(path), "modis_lst", year, month, sha256_of(path)))
+        if keep(month):
+            per_layer["modis_lst_day"].append(read_modis_lst(path, night=False))
+            per_layer["modis_lst_night"].append(read_modis_lst(path, night=True))
+            inputs.append(InputFile(str(path), "modis_lst", year, month, sha256_of(path)))
     for path in files["MOD13C2"] if want("modis_ndvi") else []:
         year, month = month_of(path)
-        if months and month not in months:
-            continue
-        per_layer["modis_ndvi"].append(read_modis_ndvi(path))
-        inputs.append(InputFile(str(path), "modis_ndvi", year, month, sha256_of(path)))
+        if keep(month):
+            per_layer["modis_ndvi"].append(read_modis_ndvi(path))
+            inputs.append(InputFile(str(path), "modis_ndvi", year, month, sha256_of(path)))
+    for path in files["MOD10CM"] if want("modis_snow") else []:
+        year, month = month_of(path)
+        if keep(month):
+            per_layer["modis_snow"].append(read_modis_snow(path))
+            inputs.append(InputFile(str(path), "modis_snow", year, month, sha256_of(path)))
+    if want("merra2_precip"):
+        precip = [(merra_month_of(p), p) for p in files["MERRA2_lnd"]]
+        years = sorted({y for (y, _), _ in precip})
+        year = years[-1] if years else None  # one calendar year, the latest found
+        chosen = [(m, p) for (y, m), p in precip if y == year]
+        if len(chosen) == 12 and not months:
+            for m, path in chosen:
+                per_layer["merra2_precip"].append(read_merra2_precip(path))
+                inputs.append(InputFile(str(path), "merra2_precip", year, m, sha256_of(path)))
+        elif chosen:
+            notes.append(f"merra2_precip: not used. An annual total needs all 12 months of one year with no --months filter; found {len(chosen)} month(s).")
 
     out: dict[str, GlobalRaster] = {}
     for layer, rasters in per_layer.items():
         if not rasters:
             continue
-        out[layer] = combine_rasters(rasters, layer_combiner(layer), layer)
-        have = sorted({m for m in (month_of(i.path)[1] for i in inputs if i.layer == layer.replace("_day", "").replace("_night", ""))})
-        notes.append(f"{layer}: {len(rasters)} month(s) combined by {layer_combiner(layer)} (calendar months {have})")
+        how = layer_combiner(layer)
+        out[layer] = combine_rasters(rasters, how, layer)
+        have = sorted({i.month for i in inputs if i.layer == layer or (layer.startswith("modis_lst") and i.layer == "modis_lst")})
+        notes.append(f"{layer}: {len(rasters)} month(s) combined by {how} (calendar months {have})")
     return out, inputs, notes
 
 
 def layer_combiner(layer: str) -> str:
-    """How monthly rasters are reduced: warmest day LST and greenest NDVI use max, coldest night LST min."""
-    return "min" if layer == "modis_lst_night" else "max"
+    """How monthly rasters of a layer are reduced (see ``LAYER_COMBINER``)."""
+    return LAYER_COMBINER[layer]
 
 
 def sample_point(raster: GlobalRaster, lon: ArrayLike, lat: ArrayLike) -> FloatArray:
