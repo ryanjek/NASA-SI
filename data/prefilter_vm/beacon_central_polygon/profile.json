@@ -1,0 +1,69 @@
+{
+  "seed": {
+    "site_id": "beacon_central_polygon",
+    "name": "Central Beacon Valley polygon site",
+    "family": "mcmurdo",
+    "lon": 160.65,
+    "lat": -77.816667,
+    "buffer_km": 0.0,
+    "coordinate_status": "published_conflict"
+  },
+  "interpretation": "A patch survives unless some gate fails. A gate fails only when the patch's [min, max] for that feature cannot overlap [lo, hi]. Missing data is unknown and passes.",
+  "gates": [
+    {
+      "feature": "snow_persistence",
+      "layer": "modis_snow",
+      "lo": 0.7,
+      "hi": 1.3,
+      "seed_lo": 1.0,
+      "seed_hi": 1.0,
+      "tolerance": 0.3,
+      "unit": "fraction",
+      "note": "Proxy: mean over the supplied months of monthly snow-cover fraction (MOD10CM, 0.05 deg). Not a count of snow days. Tolerance is NOT calibrated: no fine-scale reference for this feature is on hand, so it is a wide value fixed before any search. Needs review."
+    },
+    {
+      "feature": "lst_summer_max_c",
+      "layer": "modis_lst_day",
+      "lo": -32.209999084472656,
+      "hi": -2.2099990844726562,
+      "seed_lo": -17.209999084472656,
+      "seed_hi": -17.209999084472656,
+      "tolerance": 15.0,
+      "unit": "degC",
+      "note": "Proxy: maximum over the supplied months of monthly-mean daytime LST (MOD11C3, 0.05 deg). The Phase 1 feature is the maximum clear-sky daily LST in local summer at 1 km. Tolerance 15 degC = 5 degC (within-feature fine tolerance) + 9.5 to 9.7 degC (p95 of |gap_seed - gap_candidate|, where gap = 1 km daily extreme minus coarse monthly value), rounded up. Measured on six non-seed tiles (Sahara, Tibet, Atacama, Siberia, Greenland, East Antarctica; Jan+Jul 2025; docs/prefilter.md). Fixed before search; review with Ryan."
+    },
+    {
+      "feature": "lst_winter_min_c",
+      "layer": "modis_lst_night",
+      "lo": -56.77000045776367,
+      "hi": -26.770000457763672,
+      "seed_lo": -41.77000045776367,
+      "seed_hi": -41.77000045776367,
+      "tolerance": 15.0,
+      "unit": "degC",
+      "note": "Proxy: minimum over the supplied months of monthly-mean night LST (MOD11C3, 0.05 deg). The Phase 1 feature is the minimum clear-sky LST in local winter at 1 km. Polar night leaves gaps, which count as unknown and never prune. Tolerance 15 degC = 5 degC (within-feature fine tolerance) + 9.5 to 9.7 degC (p95 of |gap_seed - gap_candidate|, where gap = 1 km daily extreme minus coarse monthly value), rounded up. Measured on six non-seed tiles (Sahara, Tibet, Atacama, Siberia, Greenland, East Antarctica; Jan+Jul 2025; docs/prefilter.md). Fixed before search; review with Ryan."
+    }
+  ],
+  "not_gates": [
+    {
+      "feature": "elev_m",
+      "reason": "informative only: Phase 1: do not threshold elevation as a Mars-analog score. Reported for context only; never a gate."
+    },
+    {
+      "feature": "ndvi_summer_median",
+      "reason": "no valid value at the seed, so it is unknown and cannot prune"
+    },
+    {
+      "feature": "air_temp_days_above_0c",
+      "reason": "deferred: Needs daily air temperature (NASA POWER or MERRA-2); monthly LST is not a substitute for a day count."
+    },
+    {
+      "feature": "precip_mm_yr",
+      "reason": "no valid value at the seed, so it is unknown and cannot prune"
+    },
+    {
+      "feature": "humidity_mean_pct",
+      "reason": "deferred: Needs a global humidity layer (NASA POWER or MERRA-2)."
+    }
+  ]
+}
