@@ -1,0 +1,87 @@
+{
+ "computed_utc": "2026-11-15T15:09:16+00:00",
+ "method": "10x10 MOLA pixel cell (1/64 deg, ~9 km) centred on each site; repo slope_degrees; flat = slope <= 5 deg; DCI bilinear at pixel centres, median; SWIM only where the Arcadia pilot covers the site.",
+ "sources": {
+  "mola": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg064",
+  "dci": "http://www.mars.asu.edu/~ruff/DCI/dci_lo_ice_dust_16ppd_shifted.pds",
+  "swim": "https://swim.psi.edu/output/PilotStudy/Arcadia/Composite/Ci.tif"
+ },
+ "sites": {
+  "G-04": {
+   "elevationM": -4121.0,
+   "flatFraction": 1.0,
+   "dci": null,
+   "swimMedian": null,
+   "coverage": null,
+   "slopeMedianDeg": 0.67,
+   "slopeP95Deg": 1.46,
+   "dciValidFraction": 0.0,
+   "molaTile": "megt90n180gb.img",
+   "missing": {
+    "swimMedian": "outside SWIM coverage (0\u201360\u00b0N, 188\u2013208\u00b0E)",
+    "coverage": "needs every layer; SWIM has no data here",
+    "dci": "no valid TES DCI pixels in this cell"
+   }
+  },
+  "N-01": {
+   "elevationM": -954.5,
+   "flatFraction": 0.0,
+   "dci": 0.9535,
+   "swimMedian": null,
+   "coverage": null,
+   "slopeMedianDeg": 22.93,
+   "slopeP95Deg": 31.01,
+   "dciValidFraction": 1.0,
+   "molaTile": "megt00n000gb.img",
+   "missing": {
+    "swimMedian": "outside SWIM coverage (0\u201360\u00b0N, 188\u2013208\u00b0E)",
+    "coverage": "needs every layer; SWIM has no data here"
+   }
+  },
+  "N-02": {
+   "elevationM": -1933.5,
+   "flatFraction": 1.0,
+   "dci": 0.9602,
+   "swimMedian": null,
+   "coverage": null,
+   "slopeMedianDeg": 0.19,
+   "slopeP95Deg": 1.04,
+   "dciValidFraction": 1.0,
+   "molaTile": "megt00n000gb.img",
+   "missing": {
+    "swimMedian": "outside SWIM coverage (0\u201360\u00b0N, 188\u2013208\u00b0E)",
+    "coverage": "needs every layer; SWIM has no data here"
+   }
+  },
+  "N-03": {
+   "elevationM": -1383.0,
+   "flatFraction": 1.0,
+   "dci": 0.9708,
+   "swimMedian": null,
+   "coverage": null,
+   "slopeMedianDeg": 0.15,
+   "slopeP95Deg": 0.33,
+   "dciValidFraction": 1.0,
+   "molaTile": "megt00n180gb.img",
+   "missing": {
+    "swimMedian": "outside SWIM coverage (0\u201360\u00b0N, 188\u2013208\u00b0E)",
+    "coverage": "needs every layer; SWIM has no data here"
+   }
+  },
+  "N-04": {
+   "elevationM": 16306.0,
+   "flatFraction": 1.0,
+   "dci": 0.948,
+   "swimMedian": null,
+   "coverage": null,
+   "slopeMedianDeg": 1.38,
+   "slopeP95Deg": 2.27,
+   "dciValidFraction": 1.0,
+   "molaTile": "megt00n180gb.img",
+   "missing": {
+    "swimMedian": "outside SWIM coverage (0\u201360\u00b0N, 188\u2013208\u00b0E)",
+    "coverage": "needs every layer; SWIM has no data here"
+   }
+  }
+ }
+}
