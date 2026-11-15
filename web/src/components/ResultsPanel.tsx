@@ -77,7 +77,7 @@ export function ResultsPanel({ ranked, weights, siteName, continent, selectedId,
       <aside className="panel" aria-label="Top Earth analogs">
         <header className="panel-head">
           <h2>{top.length === 1 ? 'Top Earth analog' : `Top ${top.length} Earth analogs`}</h2>
-          <p>Ranked for {siteName} · weighted by your priorities</p>
+          <p>Sample data · ranked for {siteName} with the fixed rubric weights</p>
         </header>
         {top.length === 0 && <p className="empty">No Earth analog sites fall inside your ranges. Widen the ranges on the site panel to be more lenient.</p>}
         {top.map((r, i) => (
@@ -87,10 +87,12 @@ export function ResultsPanel({ ranked, weights, siteName, continent, selectedId,
     );
   }
 
+  // Ranks are always global: a continent's best site keeps its worldwide number (e.g. #2), it is not renumbered to #1.
+  const globalRank = new Map(ranked.map((r, i) => [r.id, i + 1]));
   const list = ranked.filter((r) => r.continent === continent);
   const name = CONTINENTS.find((c) => c.id === continent)?.name ?? continent;
   const active = list.find((r) => r.id === selectedId) ?? list[0];
-  const activeRank = active ? list.indexOf(active) + 1 : 0;
+  const activeRank = active ? (globalRank.get(active.id) ?? 0) : 0;
 
   return (
     <aside className="panel" aria-label={`Analog sites in ${name}`}>
@@ -105,9 +107,9 @@ export function ResultsPanel({ ranked, weights, siteName, continent, selectedId,
         <h2>
           {name} · {plural(list.length, 'analog site', 'analog sites')}
         </h2>
-        <p>Ranked within this continent</p>
+        <p>Global rank shown · best in {name} first</p>
       </header>
-      {list.length === 0 && <p className="empty">No analog sites found in {name} for this site and these priorities. Try another continent, or adjust your priorities.</p>}
+      {list.length === 0 && <p className="empty">No analog sites found in {name} inside your ranges. Try another continent, or widen the ranges on the site panel.</p>}
       {active && (
         <>
           <AnalogCard item={active} rank={activeRank} selected onSelect={() => onPick(active.id)} />
@@ -126,7 +128,7 @@ export function ResultsPanel({ ranked, weights, siteName, continent, selectedId,
           .map((r) => (
             <li key={r.id}>
               <button type="button" className="row" onClick={() => onPick(r.id)}>
-                <span className="rank-badge rank-sm">{list.indexOf(r) + 1}</span>
+                <span className="rank-badge rank-sm">{globalRank.get(r.id)}</span>
                 <span className="row-text">
                   <strong>{r.name}</strong>
                   <span>{r.region}</span>

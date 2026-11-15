@@ -1,7 +1,7 @@
 import { CATEGORIES, type Weights } from '../lib/scoring';
 import { CONTINENTS } from '../lib/geo';
 import type { ContinentId } from '../data/analogs';
-import type { MarsSite } from '../data/marsSites';
+import { markerLabel, type MarsSite } from '../data/marsSites';
 import type { Ranked } from '../lib/ranking';
 import { EarthMap } from './EarthMap';
 import { ResultsPanel } from './ResultsPanel';
@@ -27,11 +27,11 @@ export function EarthView({ site, weights, ranked, continent, selectedId, onCont
         <EarthMap ranked={ranked} continent={continent} selectedId={selectedId} onContinent={onContinent} onPick={onPick} />
 
         <div className="overlay top-left">
-          <section className="context-card" aria-labelledby="ctx-title">
+          <section className="context-card context-compact" aria-labelledby="ctx-title">
             <SectionTitle id="ctx-title">Searching for analogs of</SectionTitle>
             <div className="context-site">
               <span className="site-chip" aria-hidden="true">
-                {site.id.slice(-1)}
+                {markerLabel(site)}
               </span>
               <div>
                 <strong>{site.name}</strong>
@@ -48,9 +48,13 @@ export function EarthView({ site, weights, ranked, continent, selectedId, onCont
               ))}
             </ul>
             <button type="button" className="chip chip-button" onClick={onEditPriorities}>
-              Edit site &amp; priorities
+              Edit site &amp; ranges
             </button>
           </section>
+        </div>
+
+        <div className="overlay demo-banner" role="note">
+          <strong>Sample data</strong> — no pipeline results for this site yet. Rankings below are illustrative.
         </div>
 
         <div className="overlay top-center hide-compact">
@@ -72,7 +76,7 @@ export function EarthView({ site, weights, ranked, continent, selectedId, onCont
             <SectionTitle id="earth-key">Map key</SectionTitle>
             <p>
               <span className="key-pin" aria-hidden="true" />
-              {continent ? `Ranked within ${continentName}` : 'Top-3 analogs worldwide'}
+              {continent ? `Sites in ${continentName} · global rank` : 'Top-3 analogs worldwide'}
             </p>
             <p>
               <span className="key-ring" aria-hidden="true" />

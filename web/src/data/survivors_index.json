@@ -1,0 +1,65 @@
+{
+ "source": {
+  "folder": "prefilter/expanded_15seeds",
+  "files": "*/survivors.csv, */profile.json",
+  "grid": "HEALPix NESTED nside 128 (~50 km)"
+ },
+ "seeds": {
+  "bm_askja": {
+   "name": "Askja caldera and Dyngjufjoell (Iceland)",
+   "lon": -16.75,
+   "lat": 65.03,
+   "survivors": 5004,
+   "antarcticExcluded": 103
+  },
+  "bm_craters_of_the_moon": {
+   "name": "Craters of the Moon lava field (Idaho USA)",
+   "lon": -113.52,
+   "lat": 43.42,
+   "survivors": 22930,
+   "antarcticExcluded": 64
+  },
+  "bm_haughton": {
+   "name": "Haughton impact crater (Devon Island Canada)",
+   "lon": -89.67,
+   "lat": 75.38,
+   "survivors": 4200,
+   "antarcticExcluded": 254
+  },
+  "bm_hi_seas": {
+   "name": "HI-SEAS site on Mauna Loa (Hawaii)",
+   "lon": -155.487,
+   "lat": 19.602,
+   "survivors": 13057,
+   "antarcticExcluded": 0
+  },
+  "bm_khaybar": {
+   "name": "Harrat Khaybar and Umm Jirsan lava tube (Saudi Arabia)",
+   "lon": 39.75,
+   "lat": 25.58,
+   "survivors": 8021,
+   "antarcticExcluded": 0
+  },
+  "drill_hill": {
+   "name": "Drill Hill",
+   "lon": -89.76,
+   "lat": 75.420833,
+   "survivors": 11722,
+   "antarcticExcluded": 1002
+  },
+  "hiseas_pahoehoe_radius": {
+   "name": "Pahoehoe sample radius around HI-SEAS",
+   "lon": -155.487192,
+   "lat": 19.602378,
+   "survivors": 12408,
+   "antarcticExcluded": 146
+  },
+  "university_valley": {
+   "name": "University Valley",
+   "lon": 160.716667,
+   "lat": -77.863333,
+   "survivors": 1019,
+   "antarcticExcluded": 3960
+  }
+ }
+}

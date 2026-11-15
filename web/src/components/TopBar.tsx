@@ -1,6 +1,8 @@
+import { TIER_CHIP, type Tier } from '../lib/pipeline';
+
 export type Step = 1 | 2 | 3;
 
-const STEPS = ['Pick a Mars site', 'Tune priorities', 'Explore Earth analogs'] as const;
+const STEPS = ['Pick a Mars site', 'Set ranges', 'Explore Earth analogs'] as const;
 
 interface Props {
   step: Step;
@@ -8,9 +10,14 @@ interface Props {
   reached: Step;
   onStep: (s: Step) => void;
   onMethod: () => void;
+  onCandidates?: () => void;
+  candidatesOn?: boolean;
+  /** Data tier behind the selected site's Earth results; `null` when no site is picked. */
+  tier?: Tier | null;
 }
 
-export function TopBar({ step, reached, onStep, onMethod }: Props) {
+export function TopBar({ step, reached, onStep, onMethod, onCandidates, candidatesOn, tier }: Props) {
+  const chip = tier ? TIER_CHIP[tier] : null;
   return (
     <header className="topbar">
       <div className="brand">
@@ -24,7 +31,8 @@ export function TopBar({ step, reached, onStep, onMethod }: Props) {
         {STEPS.map((label, i) => {
           const n = (i + 1) as Step;
           const state = n === step ? 'on' : n < step ? 'done' : 'todo';
-          const enabled = n <= reached && n !== step;
+          // In the Stage 2 candidates view every reached step (including the current one) is a way back out.
+          const enabled = n <= reached && (candidatesOn || n !== step);
           return (
             <div className="step-wrap" key={label}>
               <button type="button" className={`step step-${state}`} disabled={!enabled} aria-current={n === step ? 'step' : undefined} onClick={() => onStep(n)}>
@@ -37,10 +45,17 @@ export function TopBar({ step, reached, onStep, onMethod }: Props) {
         })}
       </nav>
       <div className="topbar-actions">
-        <span className="chip chip-warn" title="Site values and Earth results are illustrative until the data pipeline is connected">
-          Sample data
-        </span>
+        {chip && (
+          <span className={`chip chip-${chip.tone}`} title={chip.title}>
+            {chip.text}
+          </span>
+        )}
         <span className="chip hide-narrow">Scoring profile · Arcadia</span>
+        {onCandidates && (
+          <button type="button" className={`chip chip-button${candidatesOn ? ' chip-mars' : ''}`} aria-pressed={candidatesOn} onClick={onCandidates}>
+            {candidatesOn ? 'Close Stage 2 candidates ✕' : 'Stage 2 candidates'}
+          </button>
+        )}
         <button type="button" className="chip chip-button" onClick={onMethod}>
           Method &amp; data
         </button>

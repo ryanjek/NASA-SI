@@ -1,9 +1,10 @@
-import type { MarsRaw } from '../lib/scoring';
+import type { SiteRaw } from '../lib/scoring';
 import { currentVariant, fixtureMars } from '../lib/fixtures';
+import marsValues from './mars_values.json';
 
 /**
- * SAMPLE DATA. Replace with the backend's threshold-screened candidate list.
- * `pos` is in the 1440x836 stylised Arcadia map space.
+ * Mars candidate sites, copied from docs/handoff/mars_sites_for_frontend.csv (main checkout).
+ * Map positions are computed from `lat`/`lon` in MarsMap, never hand-placed.
  */
 export interface Hazard {
   text: string;
@@ -14,45 +15,76 @@ export interface Hazard {
 export interface MarsSite {
   id: string;
   name: string;
+  /** Region name, optionally followed by a locality in brackets, e.g. "Vastitas Borealis (Green Valley)". */
   region: string;
   lat: number;
+  /** Degrees east, 0–360. */
   lon: number;
-  pos: { x: number; y: number };
-  raw: MarsRaw;
+  /** `null` = not computed for this site; the UI shows "Unavailable" and leaves it out of the score. */
+  raw: SiteRaw;
   description: string;
   hazards: Hazard[];
+  /** Why a value is null, per raw field (shown next to "Unavailable"). */
+  missing?: Partial<Record<keyof SiteRaw, string>>;
+  /** Caveat on the computed values, e.g. when the coordinate is approximate. */
+  valueNote?: string;
+  /** True for placeholder sites whose coordinates and values were invented for the demo. */
+  isSample: boolean;
+  /** True when the CSV marks the coordinates "approximate, from memory; verify". */
+  approxCoords: boolean;
+  /**
+   * Earth search seeds. Starts from the CSV's `mapped_earth_seeds`, plus the Phase 1 sub-sites (data/phase1/sites.csv)
+   * of the same analog that now have stage 2 rankings in all_15_sites_ranked_candidates.csv.
+   */
+  seeds: string[];
 }
+
+/** Region name without the locality, used to group sites for the map outline. */
+export const regionName = (s: MarsSite) => s.region.split(' (')[0];
+
+/** Short marker label: "G-04" -> "G4", "N-01" -> "N1". */
+export const markerLabel = (s: MarsSite) => s.id.replace(/-0?/, '');
+
+// Values come from mars_values.json, written by scripts/compute_mars_values.py from MOLA MEGDR, TES DCI and SWIM
+// (10x10 MOLA-pixel cell, ~9 km, around each site). Nulls stay null with a reason. Sanity check against the handoff
+// CSV's `approx_elevation_m_literature` (never shown as a measurement): G-04 -4,121 vs about -4,100 m,
+// N-02 -1,934 vs -1,900 m, N-03 -1,383 vs -1,400 m. N-01 is -955 vs -4,500 m: see its valueNote.
+type Computed = SiteRaw & { missing?: Partial<Record<keyof SiteRaw, string>> };
+const COMPUTED = (marsValues as unknown as { sites: Record<string, Computed> }).sites;
+const NONE: SiteRaw = { flatFraction: null, swimMedian: null, dci: null, elevationM: null, coverage: null };
+const valuesFor = (id: string): Pick<MarsSite, 'raw' | 'missing'> => {
+  const v = COMPUTED[id];
+  if (!v) return { raw: NONE };
+  return { raw: { flatFraction: v.flatFraction, swimMedian: v.swimMedian, dci: v.dci, elevationM: v.elevationM, coverage: v.coverage }, missing: v.missing };
+};
 
 const BASE_SITES: readonly MarsSite[] = [
   {
-    id: 'A-01', name: 'Site A-01', region: 'Arcadia Planitia', lat: 45.1, lon: 188.4, pos: { x: 470, y: 330 },
-    raw: { flatFraction: 0.9, swimMedian: 0.3, dci: 0.952, elevationM: -3100, coverage: 0.93 },
-    description: 'Broad, gently sloping plain in the north-west of the region. Good ice-consistency signal with a moderate dust signature.',
-    hazards: [{ text: 'Boulder fields possible', tag: 'HiRISE · partial', level: 'warn' }, { text: 'Seasonal dust storms', tag: 'Global · seasonal', level: 'warn' }],
+    id: 'G-04', name: 'Phoenix landing site', region: 'Vastitas Borealis (Green Valley)', lat: 68.2188, lon: 234.2508,
+    isSample: false, approxCoords: false, seeds: ['university_valley', 'drill_hill'], ...valuesFor('G-04'), hazards: [],
+    description: 'Landing site of NASA’s Phoenix lander (May 2008). Phoenix’s trenches exposed water ice a few centimetres below the surface.',
   },
   {
-    id: 'A-02', name: 'Site A-02', region: 'Arcadia Planitia', lat: 44.2, lon: 190.8, pos: { x: 790, y: 300 },
-    raw: { flatFraction: 0.93, swimMedian: 0.42, dci: 0.956, elevationM: -3400, coverage: 0.96 },
-    description: 'A smooth northern plain with low regional slopes and the strongest ice-consistency evidence in the region. Low elevation helps landing.',
-    hazards: [{ text: 'Boulder fields possible', tag: 'HiRISE · partial', level: 'warn' }, { text: 'Seasonal dust storms', tag: 'Global · seasonal', level: 'warn' }],
+    id: 'N-01', name: 'Gale crater', region: 'Gale crater', lat: -5.4, lon: 137.8,
+    isSample: false, approxCoords: true, seeds: ['dyngjusandur', 'dyngjusandur_central', 'dyngjusandur_sw', 'bm_askja'], ...valuesFor('N-01'), hazards: [],
+    valueNote: 'Computed at the approximate coordinate. It gives −955 m with ~23° slopes, far above the crater floor (about −4,500 m in the handoff CSV), so the point is probably on the central mound, not the floor. Verify the coordinate.',
+    description: 'Crater explored by NASA’s Curiosity rover since 2012. Target here is the Stimson formation, a sandstone of wind-blown basaltic sand (Earth analog: the Askja sand sheet, Iceland).',
   },
   {
-    id: 'A-03', name: 'Site A-03', region: 'Arcadia Planitia', lat: 42.6, lon: 187.9, pos: { x: 560, y: 520 },
-    raw: { flatFraction: 0.88, swimMedian: 0.35, dci: 0.948, elevationM: -2800, coverage: 0.91 },
-    description: 'Mid-region plain with moderate ice evidence. Dust cover is higher here, which reduces thermal-inertia confidence.',
-    hazards: [{ text: 'Higher dust cover', tag: 'TES DCI', level: 'warn' }, { text: 'Crater rim slopes nearby', tag: 'MOLA', level: 'warn' }],
+    id: 'N-02', name: 'Gusev crater', region: 'Gusev crater', lat: -14.57, lon: 175.47,
+    isSample: false, approxCoords: true, seeds: ['hiseas_pahoehoe_radius', 'bm_hi_seas'], ...valuesFor('N-02'), hazards: [],
+    description: 'Crater explored by NASA’s Spirit rover (2004–2010). Target here is basalt weathering (Earth analog: Hawaiian pāhoehoe lava).',
   },
   {
-    id: 'A-04', name: 'Site A-04', region: 'Arcadia Planitia', lat: 42.9, lon: 192.7, pos: { x: 880, y: 530 },
-    raw: { flatFraction: 0.84, swimMedian: 0.28, dci: 0.944, elevationM: -2500, coverage: 0.88 },
-    description: 'South-eastern margin of the plain. Flat enough for landing but with weaker ice evidence and partial data coverage.',
-    hazards: [{ text: 'Partial HiRISE coverage', tag: 'Data gap', level: 'risk' }, { text: 'Higher dust cover', tag: 'TES DCI', level: 'warn' }],
+    id: 'N-03', name: 'Meridiani Planum', region: 'Meridiani Planum', lat: -1.95, lon: 354.47,
+    isSample: false, approxCoords: true, seeds: ['hiseas_pahoehoe_radius', 'bm_hi_seas'], ...valuesFor('N-03'), hazards: [],
+    description: 'Plain explored by NASA’s Opportunity rover (2004–2018). Same basalt-weathering target and Earth seeds as Gusev crater.',
   },
   {
-    id: 'A-05', name: 'Site A-05', region: 'Arcadia Planitia', lat: 41.4, lon: 189.5, pos: { x: 700, y: 650 },
-    raw: { flatFraction: 0.79, swimMedian: 0.22, dci: 0.95, elevationM: -2200, coverage: 0.85 },
-    description: 'Southern edge of the screened area, close to rougher terrain. Included for contrast against the better-supported northern sites.',
-    hazards: [{ text: 'Rougher terrain to the south', tag: 'MOLA', level: 'warn' }, { text: 'Lowest data coverage', tag: 'Data gap', level: 'risk' }],
+    id: 'N-04', name: 'Arsia Mons flank', region: 'Arsia Mons', lat: -8.3, lon: 239.9,
+    isSample: false, approxCoords: true, seeds: ['mauna_loa_lava_tubes', 'bm_craters_of_the_moon', 'bm_khaybar'], ...valuesFor('N-04'), hazards: [],
+    valueNote: 'Computed at the volcano centre (summit area, about 16 km high), not at a skylight on the flank.',
+    description: 'Tharsis shield volcano with cave-skylight candidates on its flanks (target: lava tubes). This coordinate is the volcano centre, not a skylight; the exact skylight is still to be picked with the Mars team.',
   },
 ];
 

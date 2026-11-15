@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
-import { CATEGORIES, marsCategoryScores, weightedScore, type Bounds, type Weights } from '../lib/scoring';
+import { CATEGORIES, partialScore, siteScores, type Bounds, type Weights } from '../lib/scoring';
 import type { MarsSite } from '../data/marsSites';
-import { WeightSliders } from './WeightSliders';
 import { BoundsControls } from './BoundsControls';
 import { Icon } from './Icon';
 import { SectionTitle, scoreColor } from './ui';
@@ -11,34 +10,44 @@ interface Props {
   weights: Weights;
   bounds: Bounds;
   busy: boolean;
-  onChange: (w: Weights) => void;
   onBounds: (b: Bounds) => void;
   onReset: () => void;
   onClose: () => void;
   onRun: () => void;
 }
 
+/** Mars coordinates as published: planetocentric latitude N/S, longitude 0–360°E. Fewer decimals when approximate. */
+const fmtLatLon = (s: MarsSite) => {
+  const d = s.isSample ? 1 : s.approxCoords ? 2 : 4;
+  return `${Math.abs(s.lat).toFixed(d)}°${s.lat < 0 ? 'S' : 'N'} ${s.lon.toFixed(d)}°E`;
+};
+
+const RAW_FIELD = { flatness: 'flatFraction', ice: 'swimMedian', dust: 'dci', elevation: 'elevationM', coverage: 'coverage' } as const;
+
 const fmtSigned = (v: number) => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(2);
+
+const fmt = <T,>(v: T | null, f: (v: T) => string) => (v == null ? 'Unavailable' : f(v));
 
 function rawText(site: MarsSite, id: (typeof CATEGORIES)[number]['id']): string {
   const r = site.raw;
   switch (id) {
     case 'flatness':
-      return `${Math.round(r.flatFraction * 100)}%`;
+      return fmt(r.flatFraction, (v) => `${Math.round(v * 100)}%`);
     case 'ice':
-      return fmtSigned(r.swimMedian);
+      return fmt(r.swimMedian, fmtSigned);
     case 'dust':
-      return r.dci.toFixed(3);
+      return fmt(r.dci, (v) => v.toFixed(3));
     case 'elevation':
-      return `${(r.elevationM / 1000).toFixed(1).replace('-', '−')} km`;
+      return fmt(r.elevationM, (v) => `${(v / 1000).toFixed(1).replace('-', '−')} km`);
     case 'coverage':
-      return `${Math.round(r.coverage * 100)}%`;
+      return fmt(r.coverage, (v) => `${Math.round(v * 100)}%`);
   }
 }
 
-export function SitePopup({ site, weights, bounds, busy, onChange, onBounds, onReset, onClose, onRun }: Props) {
-  const scores = marsCategoryScores(site.raw);
-  const total = Math.round(weightedScore(scores, weights));
+export function SitePopup({ site, weights, bounds, busy, onBounds, onReset, onClose, onRun }: Props) {
+  const scores = siteScores(site.raw);
+  const score = partialScore(scores, weights);
+  const missing = CATEGORIES.filter((c) => scores[c.id] == null);
 
   // Esc closes the popup (unless a modal dialog is open on top).
   useEffect(() => {
@@ -56,36 +65,64 @@ export function SitePopup({ site, weights, bounds, busy, onChange, onBounds, onR
           <div className="popup-title">
             <h2>{site.name}</h2>
             <p className="muted">
-              {site.region} · {site.lat.toFixed(1)}°N {site.lon.toFixed(1)}°E
+              {site.region} · {fmtLatLon(site)}{site.isSample ? ' · sample location' : ''}
+              {site.approxCoords && <span className="tag tag-demo tag-inline">Approximate coordinates</span>}
             </p>
           </div>
-          <span className="chip chip-mars" title="Weighted screening score under your current priorities. Not a landing grade.">
-            Site score {total}
+          <span className="chip chip-mars" title="Screening score from the values below, using the fixed rubric weights. Categories without a value are left out. Not a landing grade.">
+            {score == null ? 'Score unavailable' : missing.length ? `Partial score ${Math.round(score)} · ${CATEGORIES.length - missing.length}/${CATEGORIES.length}` : `Site score ${Math.round(score)}`}
           </span>
           <button type="button" className="icon-button" onClick={onClose} aria-label="Close site details">
             <Icon name="close" />
           </button>
         </header>
 
-        <p className="popup-desc">{site.description}</p>
+        <p className="popup-desc">
+          {site.isSample && <span className="tag tag-demo">Demo only</span>} {site.description}
+        </p>
 
         <section aria-labelledby="cond-title">
-          <SectionTitle id="cond-title">Conditions</SectionTitle>
+          <div className="section-head">
+            <SectionTitle id="cond-title">Conditions</SectionTitle>
+            {site.isSample && <span className="tag tag-demo">Sample values</span>}
+          </div>
+          {!site.isSample && site.missing && (
+            <p className="hint cond-method">Computed from MOLA and TES over a ~9 km cell around the site.</p>
+          )}
+          {site.valueNote && <p className="hint cond-warn">{site.valueNote}</p>}
           <ul className="cond-list">
             {CATEGORIES.map((c) => (
               <li className="cond" key={c.id}>
                 <span className="cond-label">{c.label}</span>
                 <span className="cond-value">{rawText(site, c.id)}</span>
                 <span className="cond-src">
-                  {c.source} · scored <span style={{ color: scoreColor(scores[c.id] * 100) }}>{Math.round(scores[c.id] * 100)}</span>
+                  {scores[c.id] == null ? (
+                    `${c.source} · ${site.missing?.[RAW_FIELD[c.id]] ?? 'not computed for this site'}`
+                  ) : (
+                    <>
+                      {c.source} rubric{site.isSample ? ' · sample value' : ''} · scored <span style={{ color: scoreColor(scores[c.id]! * 100) }}>{Math.round(scores[c.id]! * 100)}</span>
+                    </>
+                  )}
                 </span>
               </li>
             ))}
           </ul>
+          {missing.length > 0 && (
+            <p className="hint cond-note">
+              {missing.length === CATEGORIES.length
+                ? 'No condition values have been computed for this site yet, so it has no score.'
+                : `Score leaves out ${missing.map((c) => c.label.toLowerCase()).join(', ')} (no value) and re-weights the rest.`}
+            </p>
+          )}
         </section>
 
         <section aria-labelledby="haz-title">
           <SectionTitle id="haz-title">Potential hazards</SectionTitle>
+          {site.hazards.length === 0 && (
+            <p className="hint">
+              <span className="tag tag-demo">Unavailable</span> No imagery or terrain hazard review has been run for this site.
+            </p>
+          )}
           <ul className="hazards">
             {site.hazards.map((h) => (
               <li key={h.text}>
@@ -97,8 +134,6 @@ export function SitePopup({ site, weights, bounds, busy, onChange, onBounds, onR
           </ul>
         </section>
 
-        <hr />
-        <WeightSliders weights={weights} onChange={onChange} />
         <hr />
         <BoundsControls site={site} bounds={bounds} onChange={onBounds} />
       </div>
