@@ -50,3 +50,7 @@ lst_winter_min_c,modis_mod11c3,alternate
 ndvi_summer_median,modis_mod13c2,alternate
 snow_persistence,modis_mod10cm,alternate
 precip_mm_yr,merra2_land,alternate
+bare_fraction,modis_mcd12c1,alternate
+slope_median_deg,gmted2010,alternate
+slope_p95_deg,gmted2010,alternate
+relief_1km_m,gmted2010,alternate

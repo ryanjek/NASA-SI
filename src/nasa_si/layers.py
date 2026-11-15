@@ -216,6 +216,46 @@ def read_modis_snow(path: Path) -> GlobalRaster:
     return GlobalRaster("snow", frac, west, north, dlon, dlat, "fraction")
 
 
+def barren_fraction(pct: np.ndarray, fill: float = 255.0) -> np.ndarray:
+    """MCD12C1 Land_Cover_Type_1_Percent for one class is percent of the pixel (0-100); above 100 is a fill."""
+    p = pct.astype(np.float64)
+    return np.where(p <= 100, p / 100.0, np.nan).astype(np.float32)
+
+
+def read_modis_barren(path: Path) -> GlobalRaster:
+    """MCD12C1 share of each 0.05 degree pixel classed 'barren or sparsely vegetated' (IGBP class 16), 0-1."""
+    raw, _ = _read_sds(Path(path), "Land_Cover_Type_1_Percent")
+    frac = barren_fraction(raw[:, :, 16])
+    frac[raw[:, :, 0] == 100] = np.nan  # open water is not land: without this the ocean reads as 0% barren
+    west, north, dlon, dlat = _cmg_geometry(frac.shape)
+    return GlobalRaster("barren", frac, west, north, dlon, dlat, "fraction")
+
+
+# Terrain file written by ``fetch_terrain.py``: per 0.05 degree cell, the minimum and maximum of the
+# 1 km-window median slope, 95th-percentile slope and relief. Each feature is two rasters (``name`` is the
+# minimum, ``name + HI`` the maximum) so a patch's envelope covers every 1 km window in it.
+HI = "@hi"
+TERRAIN_FILE = "gmted_terrain_0p05.npz"
+TERRAIN_LAYERS = {"terrain_slope_median": "s50", "terrain_slope_p95": "s95", "terrain_relief": "rel"}
+
+
+def read_terrain(path: Path) -> dict[str, GlobalRaster]:
+    data = np.load(Path(path))
+    west, north, d = float(data["lon_west"]), float(data["lat_north"]), float(data["d"])
+    out: dict[str, GlobalRaster] = {}
+    for layer, key in TERRAIN_LAYERS.items():
+        unit = "m" if key == "rel" else "deg"
+        out[layer] = GlobalRaster(layer, data[f"{key}_lo"].astype(np.float32), west, north, d, d, unit)
+        out[layer + HI] = GlobalRaster(layer + HI, data[f"{key}_hi"].astype(np.float32), west, north, d, d, unit)
+    return out
+
+
+def open_water(path: Path) -> np.ndarray:
+    """True where MCD12C1 says a 0.05 degree pixel is 100% water (class 0). Only whole-water pixels are masked."""
+    raw, _ = _read_sds(Path(path), "Land_Cover_Type_1_Percent")
+    return raw[:, :, 0] == 100
+
+
 _MERRA_FILE = re.compile(r"\.(\d{4})(\d{2})\.nc4?$")
 _MERRA_FILL = 1e14  # MERRA-2 land fields use 1e15 over ocean
 
@@ -278,6 +318,8 @@ def find_modis_files(raw_dir: Path | str) -> dict[str, list[Path]]:
     found: dict[str, list[Path]] = {}
     for product in ("MOD11C3", "MOD13C2", "MOD10CM"):
         found[product] = sorted((p for p in root.rglob(f"{product}.A*.hdf")), key=month_of)
+    found["MCD12C1"] = sorted(root.rglob("MCD12C1.A*.hdf"))
+    found["terrain"] = sorted(root.rglob(TERRAIN_FILE))
     found["MERRA2_lnd"] = sorted((p for p in root.rglob("MERRA2_*tavgM_2d_lnd_Nx.*.nc4")), key=merra_month_of)
     return found
 
@@ -289,6 +331,7 @@ LAYER_COMBINER = {
     "modis_ndvi": "max",  # greenest month
     "modis_snow": "mean",  # share of the year with snow cover
     "merra2_precip": "sum",  # annual total, only when all 12 months are present
+    "modis_barren": "mean",  # one annual land-cover file
 }
 
 
@@ -329,6 +372,24 @@ def load_stage1_rasters(
         if keep(month):
             per_layer["modis_snow"].append(read_modis_snow(path))
             inputs.append(InputFile(str(path), "modis_snow", year, month, sha256_of(path)))
+    for path in files["MCD12C1"][-1:] if want("modis_barren") else []:
+        year, _ = month_of(path)
+        per_layer["modis_barren"].append(read_modis_barren(path))
+        inputs.append(InputFile(str(path), "modis_barren", year, 0, sha256_of(path)))
+    terrain: dict[str, GlobalRaster] = {}
+    if files["terrain"] and want(*TERRAIN_LAYERS):
+        terrain = {k: v for k, v in read_terrain(files["terrain"][0]).items() if layers is None or k.removesuffix(HI) in layers}
+        if files["MCD12C1"]:
+            # GMTED2010 has values (zero) over the ocean; without this every ocean patch would count as land.
+            water = open_water(files["MCD12C1"][-1])
+            for k, r in terrain.items():
+                if r.values.shape == water.shape:
+                    terrain[k] = GlobalRaster(r.name, np.where(water, np.nan, r.values).astype(np.float32), r.lon_west, r.lat_north, r.dlon, r.dlat, r.unit)
+            notes.append("terrain: pixels that are 100% water in MCD12C1 are masked")
+        else:
+            notes.append("terrain: WARNING no MCD12C1 file, so ocean pixels are not masked")
+        inputs.append(InputFile(str(files["terrain"][0]), "terrain", 0, 0, sha256_of(files["terrain"][0])))
+        notes.append("terrain: GMTED2010 via Earth Engine, 1 km-window slope and relief, min and max per 0.05 degree cell; no data south of 56 S or north of 84 N")
     if want("merra2_precip"):
         precip = [(merra_month_of(p), p) for p in files["MERRA2_lnd"]]
         years = sorted({y for (y, _), _ in precip})
@@ -349,6 +410,7 @@ def load_stage1_rasters(
         out[layer] = combine_rasters(rasters, how, layer)
         have = sorted({i.month for i in inputs if i.layer == layer or (layer.startswith("modis_lst") and i.layer == "modis_lst")})
         notes.append(f"{layer}: {len(rasters)} month(s) combined by {how} (calendar months {have})")
+    out.update(terrain)
     return out, inputs, notes
 
 

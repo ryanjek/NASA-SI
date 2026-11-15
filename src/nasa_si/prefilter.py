@@ -97,6 +97,25 @@ def load_seeds(phase1_dir: Path | str = PHASE1_DIR) -> list[Seed]:
     return seeds
 
 
+BENCHMARK_FAMILY = "benchmark"
+
+
+def load_benchmark_seeds(path: Path | str) -> list[Seed]:
+    """Every row of ``config/benchmarks.csv`` as a seed (a team decision: the benchmarks are no longer held out).
+
+    A benchmark has no Phase 1 processes, so it is gated on every global-search feature that has a computable
+    value at its site (see ``gate_candidates``). Its acceptance interval comes from the whole site disc
+    (``radius_km``). Ids are prefixed ``bm_`` so they cannot clash with Phase 1 site ids.
+    """
+    from .benchmarks import load_benchmarks
+
+    return [
+        Seed(site_id=f"bm_{b.id}", name=b.name, family=BENCHMARK_FAMILY, lon=b.lon, lat=b.lat, buffer_km=float(b.radius_km),
+             coordinate_status=f"benchmark:{b.coord_confidence}:{'verified' if b.verified else 'unverified'}")
+        for b in load_benchmarks(Path(path))
+    ]
+
+
 def seed_process_ids(seed: Seed, sites: list[dict], processes: list[dict]) -> set[str]:
     """Processes of every transferable site in the seed's analog family (contrast sites excluded)."""
     family_sites = {r["site_id"] for r in sites if r["analog_family"] == seed.family and _flag(r["transferable_to_similarity_search"])}
@@ -105,6 +124,8 @@ def seed_process_ids(seed: Seed, sites: list[dict], processes: list[dict]) -> se
 
 def gate_candidates(seed: Seed, sites: list[dict], processes: list[dict], features: list[dict]) -> list[str]:
     """``global_search`` features supporting any process of the seed's family, in catalog order."""
+    if seed.family == BENCHMARK_FAMILY:
+        return [f["feature_id"] for f in features if f["role"] == "global_search"]
     wanted = seed_process_ids(seed, sites, processes)
     out = []
     for feat in features:
@@ -234,6 +255,8 @@ def build_profile(seed: Seed, candidates: list[str], specs: dict[str, FeatureSpe
             skipped.append((feature, f"layer {spec.layer} is not loaded"))
             continue
         window = raster.window_values(seed.lon, seed.lat, seed.buffer_km)
+        if spec.layer + "@hi" in rasters:  # a layer stored as a minimum and a maximum raster
+            window = np.concatenate([window, rasters[spec.layer + "@hi"].window_values(seed.lon, seed.lat, seed.buffer_km)])
         if window.size == 0:
             skipped.append((feature, "no valid value at the seed, so it is unknown and cannot prune"))
             continue
@@ -284,6 +307,8 @@ def compute_feature_stats(rasters: dict[str, GlobalRaster], specs: dict[str, Fea
         if spec.layer not in by_layer:
             acc = PatchAccumulator(grid.npix_coarse)
             rasters[spec.layer].accumulate(acc, grid)
+            if spec.layer + "@hi" in rasters:
+                rasters[spec.layer + "@hi"].accumulate(acc, grid)
             by_layer[spec.layer] = acc.result()
         out[feature] = by_layer[spec.layer]
     return out
@@ -430,6 +455,7 @@ def run_prefilter(
     phase1_dir: Path = PHASE1_DIR,
     features_config: Path = FEATURES_CONFIG,
     benchmarks_csv: Path | None = None,
+    benchmark_seeds: Path | None = None,
     grid: PatchGrid | None = None,
 ) -> list[dict]:
     grid = grid or PatchGrid()
@@ -438,6 +464,8 @@ def run_prefilter(
     features = read_table(phase1_dir / "features.csv")
     specs = load_feature_specs(features_config, phase1_features=features, phase1_dir=phase1_dir)
     seeds = load_seeds(phase1_dir)
+    if benchmark_seeds:
+        seeds += load_benchmark_seeds(benchmark_seeds)
     if seed_ids:
         unknown = set(seed_ids) - {s.site_id for s in seeds}
         if unknown:
@@ -509,6 +537,7 @@ def run_cli(args) -> int:  # pragma: no cover - thin wrapper around run_prefilte
             seed_ids=args.seed or None,
             months=months,
             benchmarks_csv=bench if bench.exists() else None,
+            benchmark_seeds=bench if (getattr(args, "benchmark_seeds", False) and bench.exists()) else None,
         )
     except (FileNotFoundError, ValueError) as error:
         raise SystemExit(str(error)) from error

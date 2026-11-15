@@ -116,3 +116,40 @@ def test_pixels_centred_past_a_pole_are_accepted():
     acc = PatchAccumulator(GRID.npix_coarse)
     r.accumulate(acc, GRID)
     assert acc.result().observed.any()
+
+
+def test_barren_fraction_is_a_share_and_fills_become_missing():
+    from nasa_si.layers import barren_fraction
+
+    out = barren_fraction(np.array([0, 40, 100, 255]))
+    assert out[:3].tolist() == [0.0, pytest.approx(0.4), 1.0] and np.isnan(out[3])
+
+
+def test_terrain_file_reads_as_a_minimum_and_a_maximum_raster_per_feature(tmp_path):
+    from nasa_si.layers import HI, TERRAIN_LAYERS, read_terrain
+
+    arrays = {f"{k}_{b}": np.full((4, 8), v, dtype=np.float32) for k in ("s50", "s95", "rel") for b, v in (("lo", 1.0), ("hi", 9.0))}
+    np.savez(tmp_path / "t.npz", **arrays, lon_west=-180.0, lat_north=90.0, d=45.0)
+    out = read_terrain(tmp_path / "t.npz")
+    assert set(out) == set(TERRAIN_LAYERS) | {k + HI for k in TERRAIN_LAYERS}
+    assert out["terrain_relief"].values.max() == 1.0 and out[("terrain_relief" + HI)].values.min() == 9.0
+
+
+def test_open_water_masks_only_whole_water_pixels(monkeypatch):
+    from nasa_si import layers
+
+    pct = np.zeros((2, 2, 17))
+    pct[0, 0, 0], pct[0, 1, 0] = 100, 60
+    monkeypatch.setattr(layers, "_read_sds", lambda path, name: (pct, {}))
+    assert layers.open_water("x").tolist() == [[True, False], [False, False]]
+
+
+def test_barren_layer_is_missing_over_open_water(monkeypatch):
+    from nasa_si import layers
+
+    pct = np.zeros((2, 2, 17), dtype=np.uint8)
+    pct[0, 0, 0] = 100  # all water
+    pct[1, 1, 16] = 50  # half barren
+    monkeypatch.setattr(layers, "_read_sds", lambda path, name: (pct, {}))
+    out = layers.read_modis_barren("x").values
+    assert np.isnan(out[0, 0]) and out[1, 1] == pytest.approx(0.5) and out[0, 1] == 0.0
