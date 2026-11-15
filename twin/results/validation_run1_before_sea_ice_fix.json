@@ -1,0 +1,74 @@
+{
+  "pairs": {
+    "Phoenix -> McMurdo Dry Valleys": {
+      "places_in_region": 80,
+      "chance_percentile": 1.235,
+      "trivial baseline": 3.328,
+      "all factors": 4.594,
+      "shape only": 1.047,
+      "all but shape": 7.602,
+      "passes": false
+    },
+    "Phoenix -> Elephant Head (held out)": {
+      "places_in_region": 48,
+      "chance_percentile": 2.041,
+      "trivial baseline": 5.142,
+      "all factors": 2.519,
+      "shape only": 0.077,
+      "all but shape": 7.603,
+      "passes": true
+    },
+    "Utopia -> Central Yakutia thermokarst": {
+      "places_in_region": 436,
+      "chance_percentile": 0.229,
+      "trivial baseline": 12.298,
+      "all factors": 16.787,
+      "shape only": 0.667,
+      "all but shape": 22.004,
+      "passes": false
+    },
+    "Athabasca Valles -> Icelandic highland lavas": {
+      "places_in_region": 90,
+      "chance_percentile": 1.099,
+      "trivial baseline": 10.272,
+      "all factors": 0.005,
+      "shape only": 2.531,
+      "all but shape": 0.001,
+      "passes": true
+    },
+    "Ares Vallis -> Channeled Scablands": {
+      "places_in_region": 109,
+      "chance_percentile": 0.909,
+      "trivial baseline": 30.203,
+      "all factors": 40.398,
+      "shape only": 12.852,
+      "all but shape": 33.811,
+      "passes": false
+    },
+    "Pavonis Mons flank -> Mauna Loa": {
+      "places_in_region": 15,
+      "chance_percentile": 6.25,
+      "trivial baseline": 42.824,
+      "all factors": 33.631,
+      "shape only": 7.014,
+      "all but shape": 42.13,
+      "passes": false
+    },
+    "Olympia Undae -> Namib Sand Sea": {
+      "places_in_region": 129,
+      "chance_percentile": 0.769,
+      "trivial baseline": 37.868,
+      "all factors": 0.015,
+      "shape only": 0.861,
+      "all but shape": 0.435,
+      "passes": true
+    }
+  },
+  "negative_controls_percentile": {
+    "Amazon": 34.3,
+    "Great Plains": 36.6,
+    "Hudson Bay Lowlands": 60.2,
+    "Congo": 40.3
+  },
+  "pass_percentile": 5.0
+}

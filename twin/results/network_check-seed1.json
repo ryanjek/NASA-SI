@@ -1,0 +1,26 @@
+{
+  "version": "terrain-vicreg-v1",
+  "pairs_percentile": {
+    "Phoenix -> McMurdo Dry Valleys": 18.418,
+    "Phoenix -> Elephant Head (held out)": 10.29,
+    "Utopia -> Central Yakutia thermokarst": 0.691,
+    "Athabasca Valles -> Icelandic highland lavas": 2.831,
+    "Ares Vallis -> Channeled Scablands": 7.298,
+    "Pavonis Mons flank -> Mauna Loa": 0.089,
+    "Olympia Undae -> Namib Sand Sea": 5.864
+  },
+  "sensor_test": {
+    "network": {
+      "recall_at_1": 0.99,
+      "recall_at_10": 1.0
+    },
+    "hand-made": {
+      "recall_at_1": 0.9395,
+      "recall_at_10": 0.9975
+    }
+  },
+  "artefact_test": {
+    "planet_accuracy": 0.8895750045776367,
+    "masked_earth_called_earth": 0.921999990940094
+  }
+}

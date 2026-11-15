@@ -1,0 +1,55 @@
+{
+ "spacex_control": {
+  "spacex_share": 0.263,
+  "per_site": [
+   0.3,
+   0.0,
+   0.3,
+   0.3,
+   0.3,
+   0.1,
+   0.1,
+   0.7
+  ],
+  "control_share": 0.178,
+  "earth_base_rate": 0.105,
+  "passes": true
+ },
+ "sensitivity": {
+  "1.0": {
+   "pairs": {
+    "Phoenix -> McMurdo Dry Valleys": 4.591,
+    "Phoenix -> Elephant Head (held out)": 2.518,
+    "Utopia -> Central Yakutia thermokarst": 16.775,
+    "Athabasca Valles -> Icelandic highland lavas": 0.004,
+    "Ares Vallis -> Channeled Scablands": 40.397,
+    "Pavonis Mons flank -> Mauna Loa": 33.621,
+    "Olympia Undae -> Namib Sand Sea": 0.015
+   }
+  },
+  "0.5": {
+   "pairs": {
+    "Phoenix -> McMurdo Dry Valleys": 1.004,
+    "Phoenix -> Elephant Head (held out)": 0.281,
+    "Utopia -> Central Yakutia thermokarst": 10.313,
+    "Athabasca Valles -> Icelandic highland lavas": 0.001,
+    "Ares Vallis -> Channeled Scablands": 41.598,
+    "Pavonis Mons flank -> Mauna Loa": 32.525,
+    "Olympia Undae -> Namib Sand Sea": 5.385
+   },
+   "top10_overlap_with_default": 0.526
+  },
+  "2.0": {
+   "pairs": {
+    "Phoenix -> McMurdo Dry Valleys": 18.446,
+    "Phoenix -> Elephant Head (held out)": 16.552,
+    "Utopia -> Central Yakutia thermokarst": 35.175,
+    "Athabasca Valles -> Icelandic highland lavas": 0.013,
+    "Ares Vallis -> Channeled Scablands": 20.088,
+    "Pavonis Mons flank -> Mauna Loa": 32.604,
+    "Olympia Undae -> Namib Sand Sea": 0.013
+   },
+   "top10_overlap_with_default": 0.887
+  }
+ }
+}

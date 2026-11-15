@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mars Earth Twins</title>
+<style>
+:root { --bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #5f6368; --line: #d9d7d2; --accent: #c2410c; --bar: #2563eb; }
+@media (prefers-color-scheme: dark) { :root { --bg: #15171c; --panel: #1e2128; --ink: #ecebe8; --muted: #a2a6ad; --line: #343843; --accent: #fb923c; --bar: #60a5fa; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1280px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 0 0 8px; }
+p { margin: 0 0 8px; }
+.muted { color: var(--muted); font-size: 13px; }
+.maps { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0; }
+@media (max-width: 860px) { .maps { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; }
+.map { position: relative; width: 100%; aspect-ratio: 2 / 1; }
+.map img, .map canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 4px; }
+#marsCanvas { cursor: crosshair; }
+.legend { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+.ramp { flex: 0 0 120px; height: 10px; border-radius: 2px; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+button { font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+button:hover { border-color: var(--accent); }
+.results { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+@media (max-width: 860px) { .results { grid-template-columns: 1fr; } }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { color: var(--muted); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.twin { cursor: pointer; }
+tr.twin.selected { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.bars { display: flex; gap: 3px; }
+.bar { width: 16px; height: 14px; background: var(--line); position: relative; border-radius: 2px; overflow: hidden; }
+.bar i { position: absolute; left: 0; bottom: 0; width: 100%; background: var(--bar); }
+.scroll { overflow-x: auto; }
+footer { margin-top: 16px; }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Mars to Earth twin finder</h1>
+  <p class="muted">Click anywhere on Mars. Every one of 196,383 Mars places (59 km windows) was compared with every one of 224,195 Earth land places on terrain shape, albedo, surface temperature, shallow ground ice and vegetation. The table lists the closest Earth places and how well each factor matches.</p>
+
+  <div class="maps">
+    <section class="panel">
+      <h2>Mars: <span id="marsLabel">pick a place</span></h2>
+      <div class="map"><img src="mars_gap.png" alt="Map of Mars shaded by how far each place is from its best Earth match"><canvas id="marsCanvas" width="1440" height="720"></canvas></div>
+      <div class="legend">analog gap: small <span class="ramp" style="background:linear-gradient(90deg,#fcfdbf,#fc8961,#b73779,#51127c,#000004)"></span> large (no good Earth stand-in)</div>
+      <div class="presets" id="presets"></div>
+    </section>
+    <section class="panel">
+      <h2>Earth: best twins of that place</h2>
+      <div class="map"><img src="earth_likeness.png" alt="Map of Earth shaded by how closely each land place matches its best Mars place"><canvas id="earthCanvas" width="1440" height="720"></canvas></div>
+      <div class="legend">Mars-likeness: low <span class="ramp" style="background:linear-gradient(90deg,#440154,#3b528b,#21918c,#5ec962,#fde725)"></span> high &nbsp;·&nbsp; numbered dots are the twins</div>
+    </section>
+  </div>
+
+  <div class="results">
+    <section class="panel scroll">
+      <h2>Earth twins</h2>
+      <table><thead><tr><th>#</th><th>Place (lat, lon)</th><th class="num">Match</th><th>Per factor</th><th></th></tr></thead><tbody id="twinRows"></tbody></table>
+      <p class="muted" id="familyKey"></p>
+      <p class="muted">Order is by the hub-corrected score, so a twin with a slightly lower match can rank higher when it is less close to everything else on Mars.</p>
+    </section>
+    <section class="panel scroll">
+      <h2>Factor by factor: Mars against twin <span id="twinLabel"></span></h2>
+      <table><thead><tr><th>Factor</th><th class="num">Mars</th><th class="num">Earth</th></tr></thead><tbody id="factorRows"></tbody></table>
+      <p class="muted">Day-night range is shown, not searched: Mars swings far more than any Earth surface (thin air, low thermal inertia).</p>
+    </section>
+  </div>
+
+  <footer class="panel muted">
+    <p><b>What the match means.</b> Each factor is scaled by a tolerance (albedo 0.03, temperature 5 K, ice indicator 0.5, NDVI 0.15, shape from its natural spread) and turned into a similarity that falls to zero; the match is their mean, and the ranking corrects for Earth places that are close to everything (CSLS). It is a similarity at 59 km, not a probability and not a landing-site rating.</p>
+    <p><b>Limits.</b> Mars is colder than almost every place on Earth, so temperature rarely scores and rankings rest mostly on shape, albedo, ice and vegetation. Mars temperatures come from a climate model (Mars Climate Database v6.2). Mars ground ice is mapped only between 60°S and 60°N. Earth layers are for 2025. Terrain is compared at 1.85 km pixels, so features smaller than about 2 km are invisible. A window may be up to half sea, whose flat surface then counts as terrain. Gravity, air pressure and radiation have no Earth match.</p>
+    <p><b>Data.</b> Mars: MGS MOLA gridded elevation, MGS TES albedo, SWIM 2.0 ice consistency, Mars Climate Database. Earth: NOAA ETOPO 2022, NASA MODIS MCD43C3, MYD11C3, MOD13C2, MCD12C1, ESA CCI Permafrost. Built with AI assistance (Claude); see the project README.</p>
+  </footer>
+</main>
+<script src="data.js"></script>
+<script>
+"use strict";
+const D = window.TWIN_DATA;
+const bytes = s => Uint8Array.from(atob(s), c => c.charCodeAt(0)).buffer;
+const nFactors = D.factors.length, nFam = D.families.length, K = D.twins;
+const marsFactors = new Float32Array(bytes(D.marsFactors));
+const marsHasData = new Uint8Array(bytes(D.marsHasData));
+const twinIndex = new Int32Array(bytes(D.twinIndex));
+const similarity = new Uint16Array(bytes(D.similarity));
+const familySimilarity = new Uint8Array(bytes(D.familySimilarity));
+const earthLon = new Float32Array(bytes(D.earthLon));
+const earthLat = new Float32Array(bytes(D.earthLat));
+const earthFactors = new Float32Array(bytes(D.earthFactors));
+const PRESETS = { "Jezero": [77.5, 18.4], "Gale": [137.8, -5.4], "Arcadia Planitia": [-176, 47], "Utopia Planitia": [110, 45], "Olympus Mons": [-133.8, 18.6], "Valles Marineris": [-70, -10], "Hellas floor": [70, -42], "Meridiani": [-5.5, -2], "Syrtis Major": [69, 10] };
+const DIGITS = [3, 0, 0, 0, 2, 2, 0, 2, 0];
+const $ = id => document.getElementById(id);
+let cell = 0, chosen = 0;
+
+const fmtLat = v => `${Math.abs(v).toFixed(1)}°${v >= 0 ? "N" : "S"}`;
+const fmtLon = v => `${Math.abs(v).toFixed(1)}°${v >= 0 ? "E" : "W"}`;
+const fmtValue = (v, i) => Number.isFinite(v) ? v.toFixed(DIGITS[i]) : "no data";
+
+function cellOf(lon, lat) {
+  const col = Math.min(359, Math.max(0, Math.floor(lon + 180)));
+  const row = Math.min(179, Math.max(0, Math.floor(90 - lat)));
+  return row * 360 + col;
+}
+
+function dot(ctx, lon, lat, label, big) {
+  const x = (lon + 180) / 360 * ctx.canvas.width, y = (90 - lat) / 180 * ctx.canvas.height;
+  ctx.beginPath(); ctx.arc(x, y, big ? 15 : 11, 0, 2 * Math.PI);
+  ctx.fillStyle = big ? "#fb923c" : "rgba(255,255,255,0.9)"; ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = "#111"; ctx.stroke();
+  if (label) { ctx.fillStyle = "#111"; ctx.font = "bold 16px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(label, x, y + 1); }
+}
+
+function drawMaps() {
+  const mars = $("marsCanvas").getContext("2d"), earth = $("earthCanvas").getContext("2d");
+  mars.clearRect(0, 0, 1440, 720); earth.clearRect(0, 0, 1440, 720);
+  const row = Math.floor(cell / 360), col = cell % 360;
+  dot(mars, col - 179.5, 89.5 - row, "", true);
+  for (let k = K - 1; k >= 0; k--) {
+    const e = twinIndex[cell * K + k];
+    dot(earth, earthLon[e], earthLat[e], String(k + 1), k === chosen);
+  }
+}
+
+function bars(k) {
+  let html = '<div class="bars">';
+  for (let f = 0; f < nFam; f++) {
+    const v = familySimilarity[(cell * K + k) * nFam + f];
+    html += `<span class="bar" title="${D.families[f]}: ${v}%"><i style="height:${v}%"></i></span>`;
+  }
+  return html + "</div>";
+}
+
+function renderTwins() {
+  const rows = [];
+  for (let k = 0; k < K; k++) {
+    const e = twinIndex[cell * K + k];
+    const link = `https://www.google.com/maps/@${earthLat[e].toFixed(3)},${earthLon[e].toFixed(3)},9z/data=!3m1!1e3`;
+    rows.push(`<tr class="twin${k === chosen ? " selected" : ""}" data-k="${k}"><td>${k + 1}</td><td>${fmtLat(earthLat[e])}, ${fmtLon(earthLon[e])}</td><td class="num">${(similarity[cell * K + k] / 10).toFixed(0)}%</td><td>${bars(k)}</td><td><a href="${link}" target="_blank" rel="noopener">satellite view</a></td></tr>`);
+  }
+  $("twinRows").innerHTML = rows.join("");
+  for (const tr of document.querySelectorAll("tr.twin")) tr.onclick = ev => { if (ev.target.tagName !== "A") { chosen = +tr.dataset.k; render(); } };
+}
+
+function renderFactors() {
+  const e = twinIndex[cell * K + chosen], rows = [];
+  for (let i = 0; i < nFactors; i++) {
+    rows.push(`<tr><td>${D.factors[i]}</td><td class="num">${fmtValue(marsFactors[cell * nFactors + i], i)}</td><td class="num">${fmtValue(earthFactors[e * nFactors + i], i)}</td></tr>`);
+  }
+  $("factorRows").innerHTML = rows.join("");
+  $("twinLabel").textContent = `#${chosen + 1}`;
+}
+
+function render() {
+  const row = Math.floor(cell / 360), col = cell % 360;
+  $("marsLabel").textContent = `${fmtLat(89.5 - row)}, ${fmtLon(col - 179.5)}` + (marsHasData[cell] ? "" : " (nearest searched place)");
+  renderTwins(); renderFactors(); drawMaps();
+}
+
+function select(lon, lat) { cell = cellOf(lon, lat); chosen = 0; render(); }
+
+$("marsCanvas").addEventListener("click", ev => {
+  const box = ev.currentTarget.getBoundingClientRect();
+  select((ev.clientX - box.left) / box.width * 360 - 180, 90 - (ev.clientY - box.top) / box.height * 180);
+});
+for (const [name, [lon, lat]] of Object.entries(PRESETS)) {
+  const b = document.createElement("button"); b.textContent = name; b.onclick = () => select(lon, lat); $("presets").append(b);
+}
+$("familyKey").textContent = "Bars, left to right: " + D.families.join(", ") + " (height = similarity on that factor).";
+select(...PRESETS["Jezero"]);
+</script>
+</body>
+</html>
