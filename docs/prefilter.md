@@ -45,8 +45,8 @@ support the processes of the seed's analog family. `config/prefilter_features.cs
 **Every feature names its dataset.** Each row carries the `dataset_id` it is built from, and the loader
 rejects any dataset that is not in `datasets.csv` and linked to that feature in `feature_datasets.csv`.
 The Drive folder holds only catalog tables, no rasters (all datasets are `cataloged_not_downloaded`).
-MODIS NDVI (MOD13C2) is not catalogued (the catalog names Sentinel-2 and Landsat), so the NDVI gate is
-deferred and that reader is not run.
+NDVI, snow and precipitation use coarse monthly products that are not catalogued either, so each is a
+labelled stand-in row in our copy of the catalog (see below).
 
 **Stand-in.** The Drive names `modis_lst` = MOD11A1 (daily, 1 km), too large to pull globally for a coarse
 filter. We read MOD11C3 (monthly, 0.05 deg, the same algorithm aggregated) and added it to our copy of the
@@ -58,10 +58,37 @@ winter minima a little warm; the 5 degC tolerance absorbs that. Stage 2 should u
 |---|---|---|
 | `lst_summer_max_c` | max monthly daytime LST (MOD11C3, 0.05 deg) | 15 degC (calibrated, below) |
 | `lst_winter_min_c` | min monthly night LST (MOD11C3) | 15 degC (calibrated, below) |
+| `ndvi_summer_median` | greenest month of monthly NDVI (MOD13C2, stand-in for Sentinel-2) | 0.15, **not calibrated** |
+| `snow_persistence` | mean of monthly snow-cover fraction (MOD10CM, stand-in for MOD10A1) | 0.3, **not calibrated** |
+| `precip_mm_yr` | annual sum of MERRA-2 PRECTOTLAND (stand-in for NASA POWER), all 12 months of one year | 300 mm/yr, **not calibrated** |
 
-Tolerances are fixed by the calibration below, not tuned to recover any site. **Ryan should review them.**
+The temperature tolerance is fixed by the calibration below, not tuned to recover any site. The NDVI, snow
+and precipitation tolerances are wide values fixed before the run, because no fine-scale reference for them
+is on hand to calibrate against (the same method needs MOD13A1, MOD10A1 and station or POWER data).
+**Ryan should review all of them.** The MERRA-2 grid (about 55 km) is the size of a patch, so it is repeated
+onto a 4x finer grid before use; otherwise the nine-point footprint credit would not be safe.
 
-## Latest run (MOD11C3, all 12 months of 2025)
+Which gates a seed gets depends on its processes and on whether the seed itself has a valid value. A feature
+with no valid value at the seed is unknown and prunes nothing: NDVI and precipitation have none at the
+Antarctic seeds (no good-quality NDVI on ice; MERRA-2 land excludes land ice).
+
+## Latest run (temperature, NDVI, snow, precipitation; all 12 months of 2025)
+
+| seed | gates | land patches | survive | removed |
+|---|---|---|---|---|
+| university_valley | 3 (LST x2, snow) | 65,189 | 4,593 | 93.0% |
+| beacon_central_polygon | 3 (LST x2, snow) | 65,189 | 4,619 | 92.9% |
+| hiseas_pahoehoe_radius | 1 (NDVI) | 65,189 | 29,030 | 55.5% |
+| drill_hill | 2 (LST x2) | 65,189 | 12,338 | 81.1% |
+
+Union across seeds: 35,531 patches. The land-patch count rose from 65,021 because MERRA-2 and MOD10CM add
+a few coastal patches with no valid temperature; those are unknown on temperature and pass. NDVI gives
+HI-SEAS its first gate. Snow adds little: the Antarctic seeds read 100% snow cover at 5.6 km, and the gate removes only 9 (University
+Valley) and 16 (Beacon) patches beyond what the two temperature gates already remove.
+The seed patch survives for every seed. Not yet done for the three new gates: the pixel-level miss check and
+a fine-scale recall test.
+
+## Earlier run (temperature only, MOD11C3, all 12 months of 2025)
 
 | seed | gates | land patches | survive | removed |
 |---|---|---|---|---|

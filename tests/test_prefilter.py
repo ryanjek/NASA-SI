@@ -12,6 +12,7 @@ from nasa_si.prefilter import (
     FeatureSpec,
     GateRule,
     build_profile,
+    compute_feature_stats,
     evaluate,
     gate_candidates,
     load_feature_specs,
@@ -22,6 +23,7 @@ from nasa_si.prefilter import (
 from nasa_si.prefilter import FEATURES_CONFIG, PHASE1_DIR
 
 GRID = PatchGrid(coarse_nside=8, fine_nside=64)
+_ROOT_BENCH = PHASE1_DIR.parents[1] / "config" / "benchmarks.csv"
 
 
 def stats_from(ids, vals, n=GRID.npix_coarse) -> PatchStats:
@@ -174,11 +176,11 @@ def test_seeds_are_the_located_transferable_phase1_sites():
         assert cands and "elev_m" not in [c for c in cands if False]
 
 
-def test_every_feature_uses_a_catalogued_dataset_and_lst_gates_name_their_stand_in():
+def test_every_feature_uses_a_catalogued_dataset_and_gates_name_their_stand_in():
     specs = load_feature_specs(FEATURES_CONFIG, phase1_dir=PHASE1_DIR)
     listed = {r["dataset_id"] for r in read_table(PHASE1_DIR / "datasets.csv")}
     assert {s.dataset_id for s in specs.values()} <= listed
-    assert {s.dataset_id for s in specs.values() if s.role == "gate"} == {"modis_mod11c3"}
+    assert {s.dataset_id for s in specs.values() if s.role == "gate"} == {"modis_mod11c3", "modis_mod13c2", "modis_mod10cm", "merra2_land", "modis_mcd12c1", "gmted2010"}
     for s in specs.values():
         if s.role == "gate":
             assert "stand-in" in s.source_product
@@ -190,3 +192,27 @@ def test_dataset_outside_the_drive_catalog_is_rejected(tmp_path):
                     "lst_summer_max_c,modis_mod13,gate,modis_ndvi,1,0.1,,,,\n")
     with pytest.raises(ValueError, match="not in the Drive|not in the"):
         load_feature_specs(path, phase1_dir=PHASE1_DIR)
+
+
+def test_every_benchmark_is_a_seed_gated_on_every_global_feature(tmp_path):
+    from nasa_si.prefilter import BENCHMARK_FAMILY, load_benchmark_seeds
+
+    seeds = load_benchmark_seeds(_ROOT_BENCH)
+    assert len(seeds) == 11 and all(s.site_id.startswith("bm_") and s.family == BENCHMARK_FAMILY for s in seeds)
+    assert all(s.buffer_km > 0 for s in seeds)
+    sites, procs, feats = (read_table(PHASE1_DIR / f"{n}.csv") for n in ("sites", "processes", "features"))
+    want = [f["feature_id"] for f in feats if f["role"] == "global_search"]
+    assert gate_candidates(seeds[0], sites, procs, feats) == want
+
+
+def test_a_layer_stored_as_min_and_max_rasters_widens_the_envelope_and_the_seed_interval():
+    from nasa_si.layers import HI
+
+    lo = GlobalRaster("t", np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32), -180.0, 90.0, 180.0, 90.0)
+    hi = GlobalRaster("t" + HI, lo.values + 10, -180.0, 90.0, 180.0, 90.0)
+    spec = FeatureSpec("slope_p95_deg", "gmted2010", "gate", "t", "deg", 1.0, None, None, "", "")
+    (g,) = build_profile(Seed("s", "s", "benchmark", -90.0, 45.0, 0.0, "x"), ["slope_p95_deg"], {"slope_p95_deg": spec}, {"t": lo, "t" + HI: hi}).gates
+    assert (g.seed_lo, g.seed_hi) == (1.0, 11.0)
+    stats = compute_feature_stats({"t": lo, "t" + HI: hi}, {"slope_p95_deg": spec}, GRID)["slope_p95_deg"]
+    p = int(GRID.patch_of(np.array([-90.0]), np.array([45.0]))[0])
+    assert stats.minimum[p] == 1.0 and stats.maximum[p] >= 11.0
